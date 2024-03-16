@@ -1,0 +1,12 @@
+# ----- DOCKER DEV CONTAINER -------
+# ----------------------------------
+# ----------------------------------
+
+# CMD FOR CONTAINER RUN : docker run --name dev-container -v $(pwd):/app -v $HOME/.m2:/root/.m2 -p 80:80 -it dev-image /bin/bash
+
+
+FROM eclipse-temurin:17-jdk as development
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+CMD ["sh", "-c", "mvn clean package && java -jar target/*.jar"]
