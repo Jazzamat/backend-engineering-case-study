@@ -32,7 +32,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/level")
-    public ResponseEntity<User> updateUserLevelAndCoins(@PathVariable Long userId) {
+    public ResponseEntity<User> updateUserLevelAndCoins(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(userService.updateUserLevelAndCoins(userId, COINS_PER_LEVEL));
     }
     

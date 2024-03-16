@@ -74,7 +74,32 @@ public class User {
 		this.country = country;
 	}
 
-
-
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		User other = (User) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (username == null) {
+			if (other.username != null)
+				return false;
+		} else if (!username.equals(other.username))
+			return false;
+		if (coins != other.coins)
+			return false;
+		if (level != other.level)
+			return false;
+		if (country != other.country)
+			return false;
+		return true;
+	}
 
 }
