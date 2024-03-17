@@ -7,6 +7,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      mysqldb:
+        condition: service_healthy
     ports:
       - '8080:8080'
     networks:
@@ -14,7 +17,7 @@ services:
 
   mysqldb:
     image: mysql:8.0.28-oracle
-    container_name: case-mysqldb
+    container_name: mysqldb
     restart: always
     environment:
       MYSQL_DATABASE: 'mysql-db'
@@ -28,6 +31,9 @@ services:
     volumes:
       - case-mysql-data:/var/lib/case-mysqldb
       - ./mysql-db-dump.sql:/docker-entrypoint-initdb.d/mysql-db-dump.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "mysqldb", "-u", "dreamgames", "-ppassword"]
+      retries: 10
 
 volumes:
   case-mysql-data:
