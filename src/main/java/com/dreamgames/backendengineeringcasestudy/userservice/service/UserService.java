@@ -33,5 +33,4 @@ public class UserService {
         user.setCoins(user.getCoins() + cointsToAdd);
         return userRepository.save(user);
     }
-
 }

@@ -1,23 +1,16 @@
-package com.dreamgames.backendengineeringcasestudy;
+package com.dreamgames.backendengineeringcasestudy.userservice;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.ignoreStubs;
-
-import org.awaitility.reflect.exception.FieldNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
 
-import jakarta.persistence.EntityNotFoundException;
 
 @SpringBootTest
 public class UserServiceTest {

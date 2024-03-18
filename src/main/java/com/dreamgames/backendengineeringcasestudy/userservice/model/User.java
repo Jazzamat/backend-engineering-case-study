@@ -25,7 +25,7 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	private Country country;
 
-	public enum Country {
+	public static enum Country {
 		TURKEY, USA, UK, FRANCE, GERMANY;
 		public static Country getRandomCountry() {
 			Random random = new Random();
