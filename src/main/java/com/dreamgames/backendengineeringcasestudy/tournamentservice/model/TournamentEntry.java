@@ -1,17 +1,12 @@
 package com.dreamgames.backendengineeringcasestudy.tournamentservice.model;
 
-import org.hibernate.internal.util.compare.ComparableComparator;
 
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
 
 @Entity
 public class TournamentEntry {

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.test.util.ExceptionCollector;
 
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
@@ -61,6 +62,11 @@ public class TournamentService {
     public TournamentGroup enterTournament(Long userId) throws Exception { // TODO: This should return group leader board
         Tournament currentTournament = getCurrentTournament();
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException()); 
+
+        if (tournamentEntryRepository.existsByUserIdAndTournamentId(userId, currentTournament.getId())) {
+            throw new Exception("User already entered in the current tournament");
+        } 
+
         int level = user.getLevel();
         if (level < 20) {
             throw new Exception("Level not high enough");

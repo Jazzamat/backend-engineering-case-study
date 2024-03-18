@@ -94,13 +94,19 @@ public class TournamentServiceTest {
     @Test 
     @Transactional
     public void TestEnterTwice() {
-        //TODO
+        User user = userService.createUser("letmeintwice!");
+        for (int i = 0; i < 20; i++) { // Level up to 20
+            userService.updateUserLevelAndCoins(user.getId(), 25);
+        }
+        assertThrows(Exception.class, () -> {
+            TournamentGroup group = tournamentService.enterTournament(user.getId());
+            TournamentGroup groupDup = tournamentService.enterTournament(user.getId()); 
+        });
     }
 
     @Test
     @Transactional
     public void TestMatchMixingOne() {
-
     }
 
     @Test

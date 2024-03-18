@@ -1,9 +1,6 @@
 package com.dreamgames.backendengineeringcasestudy.userservice.model;
 
-
 import java.util.Random;
-
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
@@ -21,7 +18,6 @@ public class User {
 	private int coins = 5000;
 	private int level = 1;
 
-
 	@Enumerated(EnumType.STRING)
 	private Country country;
 
@@ -30,7 +26,6 @@ public class User {
 		public static Country getRandomCountry() {
 			Random random = new Random();
 			return values()[random.nextInt(values().length)];
-
 		}
 	}
 
@@ -74,6 +69,7 @@ public class User {
 		this.country = country;
 	}
 
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -101,5 +97,4 @@ public class User {
 			return false;
 		return true;
 	}
-
 }

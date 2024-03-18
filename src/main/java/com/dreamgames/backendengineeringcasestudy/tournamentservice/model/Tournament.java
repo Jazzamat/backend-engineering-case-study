@@ -36,7 +36,7 @@ public class Tournament {
     public Tournament() {
 	}
 
-	public TournamentGroup addUser(User user) throws Exception{
+	public TournamentGroup addUser(User user) throws Exception {
         if (groups.isEmpty()) {
             TournamentGroup newGroup = new TournamentGroup(this);
             newGroup.addUser(user);
@@ -61,4 +61,7 @@ public class Tournament {
 
     }
 
+    public Long getId() {
+        return id;
+    }
 }
