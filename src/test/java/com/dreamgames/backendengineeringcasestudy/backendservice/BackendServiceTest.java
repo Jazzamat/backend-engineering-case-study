@@ -18,6 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.LevelNotHighEnoughException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.NotEnoughFundsException;
+import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
+import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentGroup;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentEntryRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentGroupRepository;
@@ -90,7 +95,7 @@ public class BackendServiceTest {
     @Transactional
     public void TestEnterTournamentBelow20() {
         User testUserBelow20 = backendService.createUser("testUser"); 
-        assertThrows(Exception.class, () -> backendService.enterTournament(testUserBelow20.getId()));
+        assertThrows(LevelNotHighEnoughException.class, () -> backendService.enterTournament(testUserBelow20.getId()));
     }
 
     
@@ -111,11 +116,32 @@ public class BackendServiceTest {
         for (int i = 0; i < 20; i++) { // Level up to 20
             backendService.updateUserLevelAndCoins(user.getId(), 25);
         }
-        assertThrows(Exception.class, () -> {
+        assertThrows(AlreadyInCurrentTournamentException.class, () -> {
             TournamentGroup group = backendService.enterTournament(user.getId());
             TournamentGroup groupDup = backendService.enterTournament(user.getId()); 
 
         });
+    }
+
+    @Test
+    @Transactional
+    public void TestDoesntHaveEnoughMoney() {
+        User user = new User("pooruser", User.Country.FRANCE);
+        user.setCoins(500);
+        user.setLevel(30);
+        userRepository.save(user);
+        assertThrows(NotEnoughFundsException.class, () -> {backendService.enterTournament(user.getId());});
+    }
+
+    @Test 
+    @Transactional
+    public void TestMoneyIsDeducted() {
+        User user = new User("pooruser", User.Country.FRANCE);
+        user.setCoins(2000);
+        user.setLevel(30);
+        userRepository.save(user);
+        assertDoesNotThrow(() -> {backendService.enterTournament(user.getId());}); 
+        assertTrue(user.getCoins() == 1000);
     }
 
     @Test
@@ -142,7 +168,73 @@ public class BackendServiceTest {
 
     @Test
     @Transactional
-    public void TestGroupLeaderBoardNonTransactional() { // TODO reset db talbes after each run
+    public void TestLevelUpBeforeGroupBegins() {
+        User turkish = new User("Kemal", User.Country.TURKEY);
+        User french = new User("Julien", User.Country.FRANCE); 
+
+        turkish.setLevel(20);
+        french.setLevel(20);
+
+        User turkishR = userRepository.save(turkish);
+        User frenchR = userRepository.save(french);
+
+        assertDoesNotThrow( () -> {
+           TournamentGroup turksGroup = backendService.enterTournament(turkish.getId());
+           backendService.enterTournament(french.getId());
+           TournamentEntry turksEntry = turksGroup.getEntries().get(0);
+           assertTrue(turksGroup.getEntries().size() == 2);
+
+           assertTrue(turksEntry.getScore() == 0);
+           backendService.updateUserLevelAndCoins(turkish.getId(),25);
+           assertTrue(turksEntry.getScore() == 0);
+        });
+    }
+
+    @Test
+    @Transactional
+    public void TestLevelUpAferGroupBegins() {
+
+        User turkish = new User("Kemal", User.Country.TURKEY);
+        User french = new User("Julien", User.Country.FRANCE); 
+        User american = new User("Bob", User.Country.USA);
+        User british = new User("Charles", User.Country.UK);
+        User german = new User("Johanes", User.Country.GERMANY);
+
+        turkish.setLevel(20);
+        french.setLevel(20);
+        american.setLevel(20);
+        british.setLevel(20);
+        german.setLevel(20);
+
+        User turkishR = userRepository.save(turkish);
+        User frenchR = userRepository.save(french);
+        User americanR = userRepository.save(american);
+        User britishR = userRepository.save(british);
+        User germanR = userRepository.save(german);
+
+        assertDoesNotThrow( () -> {
+            TournamentGroup turksGroup = backendService.enterTournament(turkish.getId());
+            TournamentEntry turksEntry = turksGroup.getEntries().get(0);
+            backendService.enterTournament(french.getId());
+            backendService.enterTournament(americanR.getId());
+            backendService.enterTournament(britishR.getId());
+            backendService.enterTournament(germanR.getId());
+ 
+            turksGroup.getEntries().get(0);
+            
+ 
+ 
+            assertTrue(turksGroup.getEntries().size() == 5);
+            assertTrue(turksEntry.getScore() == 0);
+            backendService.updateUserLevelAndCoins(turkish.getId(),25);
+            assertTrue(turksEntry.getScore() == 1);
+        });
+    }
+
+
+    @Test
+    @Transactional
+    public void TestGroupLeaderBoardNonTransactional() { // TODO reset db talbes after each run and make it non transactional
         User turkish = new User("Kemal", User.Country.TURKEY);
         User french = new User("Julien", User.Country.FRANCE); 
         User american = new User("Bob", User.Country.USA);
@@ -452,6 +544,7 @@ public class BackendServiceTest {
 
 
     @Test
+    @Transactional
     public void TestGroupLeaderBoardOrderNonTransactional() throws Exception {
         User turkish = new User("Kemal", User.Country.TURKEY);
         User french = new User("Julien", User.Country.FRANCE); 
@@ -485,10 +578,6 @@ public class BackendServiceTest {
             assertTrue(americansGroup.getId().equals(britsGroup.getId()));
             assertTrue(britsGroup.getId().equals(germansGroup.getId()));
 
-
-
-
-
             for (int i = 0; i < 5; i++) { // Turk levels up 5 while in tournament
                 backendService.updateUserLevelAndCoins(turkish.getId(), 5);
             }
@@ -511,6 +600,134 @@ public class BackendServiceTest {
             assertTrue(updatedLeaderboard.get(0).getUsername().equals("Charles")); // assert that the brit is in the lead
 
         });
+    }
+
+
+    @Test
+    @Transactional
+    public void TestCountryLeaderboardOne() {
+        User turkish = new User("Kemal", User.Country.TURKEY);
+        User french = new User("Julien", User.Country.FRANCE); 
+        User american = new User("Bob", User.Country.USA);
+        User british = new User("Charles", User.Country.UK);
+        User german = new User("Johanes", User.Country.GERMANY);
+
+        User turkishR = userRepository.save(turkish);
+        User frenchR = userRepository.save(french);
+        User americanR = userRepository.save(american);
+        User britishR = userRepository.save(british);
+        User germanR = userRepository.save(german);
+
+        for (int i = 0; i < 20; i++) { // Level up to 20
+            backendService.updateUserLevelAndCoins(turkish.getId(), 25);
+            backendService.updateUserLevelAndCoins(french.getId(), 25);
+            backendService.updateUserLevelAndCoins(american.getId(), 25);
+            backendService.updateUserLevelAndCoins(british.getId(), 25);
+            backendService.updateUserLevelAndCoins(german.getId(), 25);
+        }
+
+        assertDoesNotThrow( () -> {
+            TournamentGroup turksGroup = backendService.enterTournament(turkishR.getId());
+            TournamentGroup frenchmansGroup = backendService.enterTournament(frenchR.getId());
+            TournamentGroup americansGroup = backendService.enterTournament(americanR.getId());
+            TournamentGroup britsGroup = backendService.enterTournament(britishR.getId());
+            TournamentGroup germansGroup = backendService.enterTournament(germanR.getId());
+
+            assertTrue(turksGroup.getId().equals(frenchmansGroup.getId()));
+            assertTrue(frenchmansGroup.getId().equals(americansGroup.getId()));
+            assertTrue(americansGroup.getId().equals(britsGroup.getId()));
+            assertTrue(britsGroup.getId().equals(germansGroup.getId()));
+
+            Tournament currTournament = backendService.getCurrentTournament();
+            List<User> turkeyLeaderBoard = backendService.getCountryLeaderboard(User.Country.TURKEY,currTournament.getId());
+            List<User> franceLeaderBoard = backendService.getCountryLeaderboard(User.Country.FRANCE,currTournament.getId());
+            List<User> usaLeaderBoard = backendService.getCountryLeaderboard(User.Country.USA,currTournament.getId());
+            List<User> ukLeaderBoard = backendService.getCountryLeaderboard(User.Country.UK,currTournament.getId());
+            List<User> germanyLeaderBoard = backendService.getCountryLeaderboard(User.Country.GERMANY,currTournament.getId());
+
+            assertTrue(turkeyLeaderBoard.size() == 1);
+            assertTrue(franceLeaderBoard.size() == 1);
+            assertTrue(usaLeaderBoard.size() == 1);
+            assertTrue(ukLeaderBoard.size() == 1);
+            assertTrue(germanyLeaderBoard.size() == 1);
+            
+            User newTurkishUser = new User("NuvoTurk", User.Country.TURKEY); 
+
+            User newTurkishuserR = userRepository.save(newTurkishUser);
+
+            for (int i = 0; i < 19; i++) {
+                backendService.updateUserLevelAndCoins(newTurkishuserR.getId(), 25);
+            }
+
+            backendService.enterTournament(newTurkishuserR.getId());
+
+            List<User> updateTurkeyLeaderBoard = backendService.getCountryLeaderboard(User.Country.TURKEY, currTournament.getId());
+            List<User> updateFranceLeaderBoard = backendService.getCountryLeaderboard(User.Country.FRANCE, currTournament.getId());
+            List<User> updateUsaLeaderBoard = backendService.getCountryLeaderboard(User.Country.USA, currTournament.getId());
+            List<User> updateUkLeaderBoard = backendService.getCountryLeaderboard(User.Country.UK, currTournament.getId());
+            List<User> updateGermanyLeaderBoard = backendService.getCountryLeaderboard(User.Country.GERMANY, currTournament.getId());
+
+            assertTrue(updateTurkeyLeaderBoard.size() == 2);
+            assertTrue(updateFranceLeaderBoard.size() == 1);
+            assertTrue(updateUsaLeaderBoard.size() == 1);
+            assertTrue(updateUkLeaderBoard.size() == 1);
+            assertTrue(updateGermanyLeaderBoard.size() == 1);
+
+            assertTrue(updateTurkeyLeaderBoard.get(0).getUsername().equals("Kemal"));
+            
+            for (int i = 0; i < 50; i++) {
+                backendService.updateUserLevelAndCoins(newTurkishuserR.getId(), 25);
+            }
+
+            updateTurkeyLeaderBoard = backendService.getCountryLeaderboard(User.Country.TURKEY, currTournament.getId());
+            assertTrue(updateTurkeyLeaderBoard.get(0).getUsername().equals("NuvoTurk"));
+       });
+    } 
+
+
+    @Test
+    @Transactional
+    public void TestCountryLeaderboardTwo() {
+        User kemal = new User("Kemal", User.Country.TURKEY);
+        User ayse = new User("Ayse", User.Country.TURKEY);
+        User omer = new User("Omer", User.Country.TURKEY);
+        User kubilay = new User("Kubilay", User.Country.TURKEY);
+        User merve = new User("Merve", User.Country.TURKEY);
+
+        User kemalR = userRepository.save(kemal);
+        User asyeR = userRepository.save(ayse);
+        User omerR = userRepository.save(omer);
+        User kubilayR = userRepository.save(kubilay);
+        User merveR = userRepository.save(merve);
+
+        User charles  = new User("Charles", User.Country.UK);
+        User xavier = new User("Xavier", User.Country.UK);
+        User henry = new User("Henry", User.Country.UK);
+        User susan = new User("Susan", User.Country.UK);
+        User Elizabeth = new User("Elizabeth", User.Country.UK);
+
+        User charlesR = userRepository.save(charles);
+        User xavierR = userRepository.save(xavier);
+        User henryR = userRepository.save(henry);
+        User susanR = userRepository.save(susan);
+        User elizabethR = userRepository.save(Elizabeth);
+
+        for (int i = 0; i < 20; i++) { // Level up to 20
+            backendService.updateUserLevelAndCoins(kemal.getId(), 25);
+            backendService.updateUserLevelAndCoins(ayse.getId(), 25);
+            backendService.updateUserLevelAndCoins(omer.getId(), 25);
+            backendService.updateUserLevelAndCoins(kubilay.getId(), 25);
+            backendService.updateUserLevelAndCoins(merve.getId(), 25);
+
+            backendService.updateUserLevelAndCoins(charles.getId(), 25);
+            backendService.updateUserLevelAndCoins(xavier.getId(), 25);
+            backendService.updateUserLevelAndCoins(henry.getId(), 25);
+            backendService.updateUserLevelAndCoins(susan.getId(), 25);
+            backendService.updateUserLevelAndCoins(Elizabeth.getId(), 25);
+        }
+
+
+
 
     }
     

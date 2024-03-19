@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
+import com.dreamgames.backendengineeringcasestudy.userservice.model.User.Country;
 
 @Repository
 public interface TournamentEntryRepository extends JpaRepository<TournamentEntry, Long> {
@@ -18,5 +19,9 @@ public interface TournamentEntryRepository extends JpaRepository<TournamentEntry
     Optional<TournamentEntry> findByUserIdAndTournamentId(@Param("userId") Long userId, @Param("tournamentId") Long tournamentId);
 
     List<TournamentEntry> findByTournamentGroupIdOrderByScoreDesc(Long groupId);
+
+    @Query("SELECT te FROM TournamentEntry te WHERE te.user.country = :country AND te.tournamentGroup.tournament.id = :tournamentId ORDER BY te.score DESC")
+    List<TournamentEntry> findByCountryAndTournamentIdOrderedByScoreDesc(@Param("country") Country country, @Param("tournamentId") Long tournamentId);
+  
 
 }

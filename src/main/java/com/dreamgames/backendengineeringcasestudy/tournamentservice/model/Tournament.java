@@ -58,7 +58,6 @@ public class Tournament {
         } else {
             throw new Exception("cant add to group for some reason");
         }
-        
     }
     
     public Long getId() {

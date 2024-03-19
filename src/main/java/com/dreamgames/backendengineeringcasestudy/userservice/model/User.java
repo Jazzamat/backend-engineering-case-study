@@ -46,6 +46,13 @@ public class User {
 		}
 	}
 
+	/**
+	 * @precondition coins >= 1000
+	 * @postconditoin coins >= 0
+	*/
+	public void deductFee() {
+		this.coins = this.coins - 1000;
+	}
 
 	// public void increaseEntryScore() {
 	// 	if (currentEntry != null) {

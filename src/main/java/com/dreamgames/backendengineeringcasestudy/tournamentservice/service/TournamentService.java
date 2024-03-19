@@ -9,6 +9,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.test.util.ExceptionCollector;
 
+import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.LevelNotHighEnoughException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.NotEnoughFundsException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.TournamentGroupHasNotBegunException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentGroup;
@@ -62,9 +66,12 @@ public class TournamentService {
         return getCurrentTournament().getId();
     }
 
-    public void incrementEntryScore(Long userId, Long tournamentId) {
+    public void incrementEntryScore(Long userId, Long tournamentId) throws TournamentGroupHasNotBegunException {
         TournamentEntry entry = tournamentEntryRepository.findByUserIdAndTournamentId(userId, tournamentId)
         .orElseThrow(() -> new EntityNotFoundException("Entry not found for user " + userId + " in tournament " + tournamentId));
+        if (!entry.groupHasBegun()) {
+            throw new TournamentGroupHasNotBegunException("Will not update users tournament group score since the group has not begun (less that 5 players)");
+        }
         entry.incrementScore();
         tournamentEntryRepository.save(entry);
     }
@@ -72,12 +79,17 @@ public class TournamentService {
     public TournamentGroup enterTournament(User user) throws Exception { // TODO: This should return group leader board
         Tournament currentTournament = getCurrentTournament();
         if (tournamentEntryRepository.existsByUserIdAndTournamentId(user.getId(), currentTournament.getId())) {
-            throw new Exception("User already entered in the current tournament");
+            throw new AlreadyInCurrentTournamentException("User " + user.getUsername() + " already entered in the current tournament");
         } 
         int level = user.getLevel();
         if (level < 20) {
-            throw new Exception("Level not high enough");
+            throw new LevelNotHighEnoughException("User " + user.getUsername()+ " not high enough level to enter the tournament");
+        }   
+        if (user.getCoins() < 1000) {
+            throw new NotEnoughFundsException("User " + user.getUsername() + " does not have enough coins to enter the tournament");
         }
+
+        user.deductFee();
         TournamentGroup group = currentTournament.addUser(user);          
         tournamentGroupRepository.save(group);    
         return group;
@@ -85,6 +97,15 @@ public class TournamentService {
 
     public List<User> getGroupLeaderboard(Long groupId) {
         List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByTournamentGroupIdOrderByScoreDesc(groupId);
+        List<User> users = new ArrayList<>();
+        for (TournamentEntry entry : sortedEntries) {
+            users.add(entry.getUser());
+        }
+        return users;
+    }
+
+    public List<User> getCountryLeaderboard(User.Country country, Long tournamentId) {
+        List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByCountryAndTournamentIdOrderedByScoreDesc(country, getCurrentTournamentId());
         List<User> users = new ArrayList<>();
         for (TournamentEntry entry : sortedEntries) {
             users.add(entry.getUser());

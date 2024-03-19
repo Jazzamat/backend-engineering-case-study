@@ -36,6 +36,10 @@ public class TournamentEntry {
 		this.score++;
 	}
 
+	public boolean groupHasBegun() {
+		return this.tournamentGroup.hasBegun();
+	}
+
 
     public boolean containsCountry(User.Country country) {
         return user.getCountry() == country;

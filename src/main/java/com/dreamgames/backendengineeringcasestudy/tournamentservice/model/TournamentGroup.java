@@ -57,6 +57,10 @@ public class TournamentGroup {
         return true;
     }
 
+    public boolean hasBegun() {
+        return entries.size() == 5; 
+    }
+
     // public List<User> getGroupLeaderboard() {
     //    List<User> users = new ArrayList<>();    
     //    entries.stream().sorted().forEach((x) -> users.add(x.getUser()));
