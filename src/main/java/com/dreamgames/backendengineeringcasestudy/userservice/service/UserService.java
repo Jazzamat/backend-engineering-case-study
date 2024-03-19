@@ -27,10 +27,11 @@ public class UserService {
         return userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException());
     }
 
-    public User updateUserLevelAndCoins(Long userId, int cointsToAdd) throws EntityNotFoundException { 
+    public User updateUserLevelAndCoins(Long userId, int cointsToAdd) throws EntityNotFoundException {  //TODO needs to update users entries scores
         User user = getUser(userId); 
         user.setLevel(user.getLevel() + 1); 
         user.setCoins(user.getCoins() + cointsToAdd);
+        // user.increaseEntryScore();
         return userRepository.save(user);
     }
 }

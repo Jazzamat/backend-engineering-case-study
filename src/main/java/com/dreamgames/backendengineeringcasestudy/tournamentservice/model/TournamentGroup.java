@@ -57,11 +57,11 @@ public class TournamentGroup {
         return true;
     }
 
-    public List<User> getGroupLeaderboard() {
-       List<User> users = new ArrayList<>();    
-       entries.stream().forEach((x) -> users.add(x.getUser()));
-       return users;
-    }
+    // public List<User> getGroupLeaderboard() {
+    //    List<User> users = new ArrayList<>();    
+    //    entries.stream().sorted().forEach((x) -> users.add(x.getUser()));
+    //    return users;
+    // }
 
 	public Long getId() {
 		return id;
@@ -86,6 +86,33 @@ public class TournamentGroup {
 	public void setEntries(List<TournamentEntry> entries) {
 		this.entries = entries;
 	}
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TournamentGroup other = (TournamentGroup) obj;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (tournament == null) {
+            if (other.tournament != null)
+                return false;
+        } else if (!tournament.equals(other.tournament))
+            return false;
+        if (entries == null) {
+            if (other.entries != null)
+                return false;
+        } else if (!entries.equals(other.entries))
+            return false;
+        return true;
+    }
    
     
 

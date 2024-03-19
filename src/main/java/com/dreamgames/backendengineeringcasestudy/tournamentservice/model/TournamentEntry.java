@@ -32,6 +32,10 @@ public class TournamentEntry {
 		this.user = user;
 	}
 
+	public void incrementScore() {
+		this.score++;
+	}
+
 
     public boolean containsCountry(User.Country country) {
         return user.getCountry() == country;
@@ -67,4 +71,38 @@ public class TournamentEntry {
 	public void setRewardClaimed(boolean rewardClaimed) {
 		this.rewardClaimed = rewardClaimed;
 	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TournamentEntry other = (TournamentEntry) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (tournamentGroup == null) {
+			if (other.tournamentGroup != null)
+				return false;
+		} else if (!tournamentGroup.equals(other.tournamentGroup))
+			return false;
+		if (user == null) {
+			if (other.user != null)
+				return false;
+		} else if (!user.equals(other.user))
+			return false;
+		if (score != other.score)
+			return false;
+		if (rewardClaimed != other.rewardClaimed)
+			return false;
+		return true;
+	}
+
+	
 }

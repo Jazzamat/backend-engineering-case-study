@@ -1,8 +1,13 @@
 package com.dreamgames.backendengineeringcasestudy.userservice.model;
 
 import java.util.Random;
+
+import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Enumerated;
@@ -21,6 +26,18 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	private Country country;
 
+	// @OneToOne
+	// private TournamentEntry currentEntry;
+
+	public User() {
+	}
+
+	public User(String username, Country country) {
+		this.username = username;
+		this.country = country;
+	}
+
+
 	public static enum Country {
 		TURKEY, USA, UK, FRANCE, GERMANY;
 		public static Country getRandomCountry() {
@@ -28,6 +45,17 @@ public class User {
 			return values()[random.nextInt(values().length)];
 		}
 	}
+
+
+	// public void increaseEntryScore() {
+	// 	if (currentEntry != null) {
+	// 		currentEntry.increaseEntryScore();
+	// 	}
+	// }
+
+	// public void setCurrentEntry(TournamentEntry currentEntry) {
+	// 	this.currentEntry = currentEntry;
+	// }
 
 	public Long getId() {
 		return id;
@@ -69,7 +97,6 @@ public class User {
 		this.country = country;
 	}
 
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -97,4 +124,6 @@ public class User {
 			return false;
 		return true;
 	}
+
+
 }

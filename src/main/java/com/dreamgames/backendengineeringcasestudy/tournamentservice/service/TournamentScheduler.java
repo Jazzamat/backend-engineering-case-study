@@ -1,6 +1,8 @@
 package com.dreamgames.backendengineeringcasestudy.tournamentservice.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
+
+import net.bytebuddy.asm.Advice.Local;
 
 @Component
 public class TournamentScheduler {
@@ -26,7 +30,18 @@ public class TournamentScheduler {
             tournamentService.getCurrentTournament();
         } catch (RuntimeException e) {
             return tournamentService.createTournament(LocalDateTime.now(ZoneOffset.UTC), 
-                                        LocalDateTime.now(ZoneOffset.UTC).withHour(23)); 
+                                        LocalDateTime.now(ZoneOffset.UTC).withHour(20)); 
+        }
+        return null;
+    }
+
+
+    public Tournament startLocalTimeTournament() {
+        try {
+            tournamentService.getCurrentTournament();
+        } catch (RuntimeException e) {
+            return tournamentService.createTournament(LocalDateTime.now(), 
+                                        LocalDateTime.now().withHour(20)); 
         }
         return null;
     }
