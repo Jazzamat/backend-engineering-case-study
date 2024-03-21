@@ -16,6 +16,17 @@ import jakarta.persistence.EnumType;
 @Entity
 public class User {
 
+    private static final int FIRST_PLACE_WIN = 10000;
+    private static final int SECOND_PLACE_WIN = 5000;
+
+	public static enum Country {
+		TURKEY, USA, UK, FRANCE, GERMANY;
+		public static Country getRandomCountry() {
+			Random random = new Random();
+			return values()[random.nextInt(values().length)];
+		}
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
@@ -26,8 +37,6 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	private Country country;
 
-	// @OneToOne
-	// private TournamentEntry currentEntry;
 
 	public User() {
 	}
@@ -37,21 +46,29 @@ public class User {
 		this.country = country;
 	}
 
-
-	public static enum Country {
-		TURKEY, USA, UK, FRANCE, GERMANY;
-		public static Country getRandomCountry() {
-			Random random = new Random();
-			return values()[random.nextInt(values().length)];
-		}
-	}
-
 	/**
 	 * @precondition coins >= 1000
 	 * @postconditoin coins >= 0
 	*/
 	public void deductFee() {
 		this.coins = this.coins - 1000;
+	}
+
+	/**
+	 *	Claims reward based on what the rank is
+	 * @param rank
+	 */
+	public void claimReward(int rank) {
+		if (rank == 1) {
+            setCoins(coins + FIRST_PLACE_WIN);
+        } else if (rank == 2) {
+			setCoins(SECOND_PLACE_WIN);
+        }
+	}
+
+	public void updateLevelAndCoins(int cointsToAdd) {
+		setLevel(getLevel() + 1); 
+        setCoins(getCoins() + cointsToAdd);
 	}
 
 	// public void increaseEntryScore() {

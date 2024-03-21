@@ -4,16 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.dreamgames.backendengineeringcasestudy.tournamentservice.service.TournamentService;
+import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.GroupLeaderBoard;
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
-import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
-import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
 
 @RestController
 @RequestMapping("/backend")
 public class BackendController {
     
-
+    
     private final BackendService backendService;
     
     @Autowired
@@ -35,22 +33,52 @@ public class BackendController {
     
     @PostMapping("/tournaments/enter")
     public ResponseEntity<?> enterTournament(@RequestParam Long userId) {
-        return null;
-        //     try {
-            //         // Check if the user exists
-            //         User user = userService.getUser(userId);
-            //         if (user == null) {
-                //             return ResponseEntity.badRequest().body("User does not exist");
-                //         }
-                //         // TournamentEntry entry = tournamentService.enterTournament(userId);
-                //         // Assuming a method to get group leaderboard based on TournamentEntry's group ID
-                //         // This is just a simplified example. Adjust according to your actual implementation.
-                //         return ResponseEntity.ok(entry);
-                //     } catch (Exception e) {
-                    //         return ResponseEntity.badRequest().body(e.getMessage());
-                    //     }
-                }
-                // Additional endpoints to interact with UserService and TournamentService as needed
+        try {
+            GroupLeaderBoard groupLeaderBoard = backendService.enterTournament(userId);
+            return ResponseEntity.ok(groupLeaderBoard);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @PostMapping("/tournaments/{tournamentId}/users/{userId}/claimReward")
+    public ResponseEntity<?> claimReward(@PathVariable Long userId, @PathVariable Long tournamentId) {
+        try {
+            User updatedUser = backendService.claimReward(userId, tournamentId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @GetMapping("/tournaments/{tournamentId}/users/{userId}/rank")
+    public ResponseEntity<?> getGroupRank(@PathVariable Long userId, @PathVariable Long tournamentId) {
+        try {
+            int rank = backendService.getGroupRank(userId, tournamentId);
+            return ResponseEntity.ok().body(rank);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @GetMapping("/tournaments/{groupId}/leaderboard")
+    public ResponseEntity<?> getGroupLeaderboard(@PathVariable Long groupId) {
+        try {
+            GroupLeaderBoard groupLeaderBoard = backendService.getGroupLeaderboard(groupId);
+            return ResponseEntity.ok(groupLeaderBoard);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @GetMapping("/tournaments/{tournamentId}/leaderboard")
+    public ResponseEntity<?> getCountryLeaderboard(@PathVariable Long tournamentId) {
+        try {
+            var countryLeaderboard = backendService.getCountryLeaderboard(tournamentId);
+            return ResponseEntity.ok(countryLeaderboard);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
-            
-            
+

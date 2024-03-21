@@ -22,6 +22,7 @@ public interface TournamentEntryRepository extends JpaRepository<TournamentEntry
 
     @Query("SELECT te FROM TournamentEntry te WHERE te.user.country = :country AND te.tournamentGroup.tournament.id = :tournamentId ORDER BY te.score DESC")
     List<TournamentEntry> findByCountryAndTournamentIdOrderedByScoreDesc(@Param("country") Country country, @Param("tournamentId") Long tournamentId);
-  
 
+    @Query("SELECT COUNT(te) > 0 FROM TournamentEntry te WHERE te.user.id = :userId AND te.rewardClaimed = false")
+    boolean existsByUserIdAndUnclaimedReward(@Param("userId") Long userId);
 }

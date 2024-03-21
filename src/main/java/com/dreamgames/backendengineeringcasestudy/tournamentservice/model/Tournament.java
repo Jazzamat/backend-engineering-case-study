@@ -59,6 +59,10 @@ public class Tournament {
             throw new Exception("cant add to group for some reason");
         }
     }
+
+    public boolean hasEnded() {
+        return LocalDateTime.now().isAfter(endTime);
+    }
     
     public Long getId() {
         return id;

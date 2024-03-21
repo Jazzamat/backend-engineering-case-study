@@ -40,7 +40,6 @@ public class TournamentEntry {
 		return this.tournamentGroup.hasBegun();
 	}
 
-
     public boolean containsCountry(User.Country country) {
         return user.getCountry() == country;
     }
@@ -54,12 +53,22 @@ public class TournamentEntry {
 	public TournamentGroup getTournamentGroup() {
 		return tournamentGroup;
 	}
+
+	public Long getGroupId() {
+		return tournamentGroup.getId();
+	}
+
 	public void setTournamentGroup(TournamentGroup tournamentGroup) {
 		this.tournamentGroup = tournamentGroup;
 	}
 	public User getUser() {
 		return user;
 	}
+
+	public Long getUserId() {
+		return user.getId();
+	}
+
 	public void setUser(User user) {
 		this.user = user;
 	}
@@ -73,9 +82,21 @@ public class TournamentEntry {
 		return rewardClaimed;
 	}
 	public void setRewardClaimed(boolean rewardClaimed) {
+		
 		this.rewardClaimed = rewardClaimed;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((tournamentGroup == null) ? 0 : tournamentGroup.hashCode());
+		result = prime * result + ((user == null) ? 0 : user.hashCode());
+		result = prime * result + score;
+		result = prime * result + (rewardClaimed ? 1231 : 1237);
+		return result;
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -107,6 +128,9 @@ public class TournamentEntry {
 			return false;
 		return true;
 	}
+
+
+	
 
 	
 }
