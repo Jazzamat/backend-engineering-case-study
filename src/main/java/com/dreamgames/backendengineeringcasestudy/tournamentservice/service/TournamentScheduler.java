@@ -8,6 +8,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
 
 
@@ -25,7 +26,7 @@ public class TournamentScheduler {
     public Tournament startNewTournament() {
         try {
             tournamentService.getCurrentTournament();
-        } catch (RuntimeException e) {
+        } catch (NoSuchTournamentException e) {
             return tournamentService.createTournament(LocalDateTime.now(ZoneOffset.UTC), 
                                         LocalDateTime.now(ZoneOffset.UTC).withHour(20)); 
         }
@@ -36,7 +37,7 @@ public class TournamentScheduler {
     public Tournament startLocalTimeTournament() {
         try {
             tournamentService.getCurrentTournament();
-        } catch (RuntimeException e) {
+        } catch (NoSuchTournamentException e) {
             return tournamentService.createTournament(LocalDateTime.now(), 
                                         LocalDateTime.now().withHour(23)); 
         }

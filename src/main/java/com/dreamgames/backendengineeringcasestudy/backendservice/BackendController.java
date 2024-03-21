@@ -20,15 +20,23 @@ public class BackendController {
     }
     
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody String username) {
-        User user = backendService.createUser(username);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<?> createUser(@RequestParam String username) {
+        try {
+            User user = backendService.createUser(username);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
-    @PutMapping("/users/{userId}/level")
-    public ResponseEntity<User> updateUserLevelAndCoins(@PathVariable Long userId) {
-        User updatedUser = backendService.updateUserLevelAndCoins(userId, 25); // Assuming 25 coins per level as a constant
-        return ResponseEntity.ok(updatedUser);
+    @PutMapping("/users/updateLevel")
+    public ResponseEntity<?> updateUserLevelAndCoins(@RequestParam Long userId) {
+        try {
+            User updatedUser = backendService.updateUserLevelAndCoins(userId, 25); // TODO remove magic number and perhaps place it elsewhere (maybe in user)  
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
     @PostMapping("/tournaments/enter")
@@ -41,8 +49,8 @@ public class BackendController {
         }
     }
     
-    @PostMapping("/tournaments/{tournamentId}/users/{userId}/claimReward")
-    public ResponseEntity<?> claimReward(@PathVariable Long userId, @PathVariable Long tournamentId) {
+    @PostMapping("/tournaments/claimReward")
+    public ResponseEntity<?> claimReward(@RequestParam("userId") Long userId, @RequestParam("tournamentId") Long tournamentId) {
         try {
             User updatedUser = backendService.claimReward(userId, tournamentId);
             return ResponseEntity.ok(updatedUser);
@@ -51,8 +59,8 @@ public class BackendController {
         }
     }
     
-    @GetMapping("/tournaments/{tournamentId}/users/{userId}/rank")
-    public ResponseEntity<?> getGroupRank(@PathVariable Long userId, @PathVariable Long tournamentId) {
+    @GetMapping("/tournaments/rank")
+    public ResponseEntity<?> getGroupRank(@RequestParam("userId") Long userId, @RequestParam("tournamentId") Long tournamentId) {
         try {
             int rank = backendService.getGroupRank(userId, tournamentId);
             return ResponseEntity.ok().body(rank);
@@ -61,8 +69,8 @@ public class BackendController {
         }
     }
     
-    @GetMapping("/tournaments/{groupId}/leaderboard")
-    public ResponseEntity<?> getGroupLeaderboard(@PathVariable Long groupId) {
+    @GetMapping("/tournaments/leaderboard/group")
+    public ResponseEntity<?> getGroupLeaderboard(@RequestParam("groupId") Long groupId) {
         try {
             GroupLeaderBoard groupLeaderBoard = backendService.getGroupLeaderboard(groupId);
             return ResponseEntity.ok(groupLeaderBoard);
@@ -71,8 +79,8 @@ public class BackendController {
         }
     }
     
-    @GetMapping("/tournaments/{tournamentId}/leaderboard")
-    public ResponseEntity<?> getCountryLeaderboard(@PathVariable Long tournamentId) {
+    @GetMapping("/tournaments/leaderboard/country")
+    public ResponseEntity<?> getCountryLeaderboard(@RequestParam("tournamentId") Long tournamentId) {
         try {
             var countryLeaderboard = backendService.getCountryLeaderboard(tournamentId);
             return ResponseEntity.ok(countryLeaderboard);

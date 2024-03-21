@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentEntryRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentGroupRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentRepository;
@@ -51,7 +52,7 @@ public class TournamentServiceTest {
     }
 
     @Test 
-    public void getCurrentTournament() {
+    public void getCurrentTournament() throws NoSuchTournamentException {
         assertDoesNotThrow( () -> {tournamentService.getCurrentTournament();});
         assertNotNull(tournamentService.getCurrentTournament());
     }

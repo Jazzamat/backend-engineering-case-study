@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.HasUnclaimedRewards;
 import com.dreamgames.backendengineeringcasestudy.exceptions.LevelNotHighEnoughException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.NotEnoughFundsException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.TournamentGroupHasNotBegunException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.GroupLeaderBoard;
@@ -57,14 +58,14 @@ public class TournamentService {
     }
 
     @Cacheable("currentTournament")
-    public Tournament getCurrentTournament() {
+    public Tournament getCurrentTournament() throws NoSuchTournamentException {
         LocalDateTime now = LocalDateTime.now();
         return tournamentRepository.findTournamentByStartTimeBeforeAndEndTimeAfter(now, now)
-            .orElseThrow(() -> new RuntimeException("No current tournament found"));
+            .orElseThrow(() -> new NoSuchTournamentException("No current tournament found"));
     }
 
     @Cacheable("currentTournament")
-    public Long getCurrentTournamentId() {
+    public Long getCurrentTournamentId() throws NoSuchTournamentException {
         return getCurrentTournament().getId();
     }
 
@@ -117,7 +118,7 @@ public class TournamentService {
         return new GroupLeaderBoard(pairs, groupId);
     }
 
-    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) {
+    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException {
         List<Pair<User.Country,Integer>> countryLeaderBoard = new ArrayList<>();
         for (User.Country country : User.Country.values()) {
             List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByCountryAndTournamentIdOrderedByScoreDesc(country, getCurrentTournamentId()); // TODO can make a new query that doesn't sort for performance purposes

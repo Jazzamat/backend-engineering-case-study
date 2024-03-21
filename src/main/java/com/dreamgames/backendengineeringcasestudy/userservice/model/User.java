@@ -1,13 +1,8 @@
 package com.dreamgames.backendengineeringcasestudy.userservice.model;
 
 import java.util.Random;
-
-import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Enumerated;
@@ -15,9 +10,18 @@ import jakarta.persistence.EnumType;
 
 @Entity
 public class User {
-
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+	private String username;
+	private int coins = 5000;
+	private int level = 1;
     private static final int FIRST_PLACE_WIN = 10000;
     private static final int SECOND_PLACE_WIN = 5000;
+
+
+	@Enumerated(EnumType.STRING)
+	private Country country;
 
 	public static enum Country {
 		TURKEY, USA, UK, FRANCE, GERMANY;
@@ -26,17 +30,6 @@ public class User {
 			return values()[random.nextInt(values().length)];
 		}
 	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
-	private String username;
-	private int coins = 5000;
-	private int level = 1;
-
-	@Enumerated(EnumType.STRING)
-	private Country country;
-
 
 	public User() {
 	}
@@ -70,16 +63,6 @@ public class User {
 		setLevel(getLevel() + 1); 
         setCoins(getCoins() + cointsToAdd);
 	}
-
-	// public void increaseEntryScore() {
-	// 	if (currentEntry != null) {
-	// 		currentEntry.increaseEntryScore();
-	// 	}
-	// }
-
-	// public void setCurrentEntry(TournamentEntry currentEntry) {
-	// 	this.currentEntry = currentEntry;
-	// }
 
 	public Long getId() {
 		return id;

@@ -1,6 +1,5 @@
 package com.dreamgames.backendengineeringcasestudy.tournamentservice.model;
 
-
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -128,9 +127,4 @@ public class TournamentEntry {
 			return false;
 		return true;
 	}
-
-
-	
-
-	
 }

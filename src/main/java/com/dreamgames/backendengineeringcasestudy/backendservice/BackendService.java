@@ -1,22 +1,18 @@
 package com.dreamgames.backendengineeringcasestudy.backendservice;
+
 import org.javatuples.Pair;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
-import javax.swing.GroupLayout.Group;
-
+import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.TournamentGroupHasNotBegunException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.TournamentHasNotEndedException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.GroupLeaderBoard;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
-import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentGroup;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.service.TournamentService;
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
-
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 
 
 @Service
@@ -50,9 +46,12 @@ public class BackendService {
             tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId());
         } catch (TournamentGroupHasNotBegunException e) {
             // do nothin 
+        } catch (NoSuchTournamentException e) {
+            // do nothin 
         } catch (EntityNotFoundException e) {
             // user has no entry to update
-        }
+        } 
+        
         return userService.updateUserLevelAndCoins(userId, cointsToAdd);
     }
     
@@ -106,7 +105,7 @@ public class BackendService {
      * @param tournamentId
      * @return
      */
-    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) { // TODO test some more now that you have changed it arround 
+    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException { // TODO test some more now that you have changed it arround 
         return tournamentService.getCountryLeaderboard(tournamentId);
     }
     
@@ -115,7 +114,7 @@ public class BackendService {
     
     // =========== HELPER MEHTODS ============== //
 
-    public Tournament getCurrentTournament() {
+    public Tournament getCurrentTournament() throws NoSuchTournamentException {
         return tournamentService.getCurrentTournament();
     }
 
