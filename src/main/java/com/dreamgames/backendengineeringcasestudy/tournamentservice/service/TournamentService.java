@@ -8,6 +8,7 @@ import java.util.stream.IntStream;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
@@ -39,7 +40,7 @@ public class TournamentService {
 
     @Autowired
     private TournamentEntryRepository tournamentEntryRepository;
-   
+
     public TournamentService(TournamentRepository tournamentRepository, UserRepository userRepository,
         TournamentGroupRepository tournamentGroupRepository, TournamentEntryRepository tournamentEntryRepository) {
         this.tournamentRepository = tournamentRepository;
@@ -74,14 +75,22 @@ public class TournamentService {
         return tournament.hasEnded();
     }
 
-    public void incrementEntryScore(Long userId, Long tournamentId) throws TournamentGroupHasNotBegunException {
+    /**
+     * Increments the entries score and returns the new score and the groupId of the entry
+     * @param userId
+     * @param tournamentId
+     * @throws TournamentGroupHasNotBegunException
+     */
+    public Pair<Integer, Long> incrementEntryScore(Long userId, Long tournamentId) throws TournamentGroupHasNotBegunException {
         TournamentEntry entry = tournamentEntryRepository.findByUserIdAndTournamentId(userId, tournamentId)
         .orElseThrow(() -> new EntityNotFoundException("Entry not found for user " + userId + " in tournament " + tournamentId));
         if (!entry.groupHasBegun()) {
             throw new TournamentGroupHasNotBegunException("Will not update users tournament group score since the group has not begun (less that 5 players)");
         }
-        entry.incrementScore();
+        Integer score = entry.incrementScore();
+        Long id = entry.getGroupId();
         tournamentEntryRepository.save(entry);
+        return Pair.with(score, id);
     }
   
     public GroupLeaderBoard enterTournament(User user) throws Exception { // TODO maybe can refactor to make look nicer 

@@ -31,8 +31,8 @@ public class TournamentEntry {
 		this.user = user;
 	}
 
-	public void incrementScore() {
-		this.score++;
+	public int incrementScore() {
+		return this.score++;
 	}
 
 	public boolean groupHasBegun() {

@@ -1,6 +1,8 @@
 package com.dreamgames.backendengineeringcasestudy.backendservice;
 
 import org.javatuples.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -12,7 +14,13 @@ import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tourna
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.service.TournamentService;
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
+import java.util.Set;
+import java.util.ArrayList;
+
 import jakarta.persistence.EntityNotFoundException;
+
+import java.nio.file.attribute.GroupPrincipal;
+import java.time.Duration;
 
 
 @Service
@@ -21,9 +29,13 @@ public class BackendService {
     private UserService userService;
     private TournamentService tournamentService;
 
-    public BackendService(UserService userService, TournamentService tournamentService) {
+    @Autowired
+    private final RedisTemplate<String,Object> realtimeleaderboard; //TODO maybe I need to make this a list of templates. or maybe have one for counrty one for group
+
+    public BackendService(UserService userService, TournamentService tournamentService, RedisTemplate<String,Object> realtimeleaderboard) {
         this.userService = userService;
         this.tournamentService = tournamentService;
+        this.realtimeleaderboard = realtimeleaderboard;
     }
 
     /**
@@ -43,7 +55,8 @@ public class BackendService {
      */
     public User updateUserLevelAndCoins(Long userId, int cointsToAdd)  {
         try {
-            tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId());
+            Pair<Integer,Long> scoreAndgroupId = tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId());
+            updateRedisGroupLeaderboard(scoreAndgroupId.getValue1(),userId, scoreAndgroupId.getValue0());
         } catch (TournamentGroupHasNotBegunException e) {
             // do nothin 
         } catch (NoSuchTournamentException e) {
@@ -63,7 +76,11 @@ public class BackendService {
      */
     public GroupLeaderBoard enterTournament(Long userId) throws Exception { // TODO: Test that users can't enter a new tournament without claiming previous rewards
         User user = userService.getUser(userId);
-        return tournamentService.enterTournament(user);
+        GroupLeaderBoard groupLeaderBoard = tournamentService.enterTournament(user);
+        Integer initialScore = 0;
+        Long groupId = groupLeaderBoard.getGroupId();
+        updateRedisGroupLeaderboard(groupId, userId, initialScore);
+        return groupLeaderBoard;
     } 
     
     /**
@@ -96,7 +113,30 @@ public class BackendService {
      * @return
      */
     public GroupLeaderBoard getGroupLeaderboard(Long groupId) { // TODO test some more now that we have score in there too
-        return tournamentService.getGroupLeaderboard(groupId);
+        System.out.println("GETTING GROUP LEADER BOARD");
+        String redisKey = "leaderboard:group:" + groupId;
+        Boolean exists = realtimeleaderboard.hasKey(redisKey);
+        if (exists == null || !exists) {
+            System.out.println("FIRST CALL SO NO REDIS");
+            GroupLeaderBoard groupLeaderBoard = tournamentService.getGroupLeaderboard(groupId); // this call queries the database
+            groupLeaderBoard.getLeaderboard().forEach(pair -> {
+                realtimeleaderboard.opsForZSet().add(redisKey, pair.getValue0().getId() + ":" + pair.getValue1(), pair.getValue1());
+            });
+            realtimeleaderboard.expire(redisKey,Duration.ofHours(1));
+            return groupLeaderBoard;
+        } else {
+            System.out.println("REDIS ALREADY EXISTS SO PULLING FROM CACHE");
+            Set<Object> leaderboardData = realtimeleaderboard.opsForZSet().reverseRange(redisKey, 0, -1);
+            List<Pair<User,Integer>> leaderboard = new ArrayList<>();
+            leaderboardData.forEach(item -> {
+                String[] parts = ((String)item).split(":");
+                Long userId = Long.parseLong(parts[0]); // Extracting user ID
+                Integer score = Integer.parseInt(parts[1]); // Extracting score
+                User user = userService.getUser(userId);
+                leaderboard.add(Pair.with(user,score));
+            });
+            return new GroupLeaderBoard(leaderboard, groupId);
+        }
     }
     
     /**
@@ -109,10 +149,31 @@ public class BackendService {
         return tournamentService.getCountryLeaderboard(tournamentId);
     }
     
-   
-
     
     // =========== HELPER MEHTODS ============== //
+
+    private void updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore) {
+        String redisKey = "leaderboard:group:" + groupId;
+    
+        Boolean exists = realtimeleaderboard.hasKey(redisKey);
+        if (exists != null && exists) {
+    
+            Set<Object> userScores = realtimeleaderboard.opsForZSet().rangeByScore(redisKey, 0, Double.MAX_VALUE);
+            if(userScores != null){
+                userScores.stream()
+                          .filter(score -> score.toString().startsWith(userId + ":"))
+                          .findFirst()
+                          .ifPresent(score -> realtimeleaderboard.opsForZSet().remove(redisKey, score));
+            }
+    
+            String valueToStore = userId + ":" + newScore;
+            realtimeleaderboard.opsForZSet().add(redisKey, valueToStore, newScore);
+        } else {
+            System.out.println("Leaderboard for group " + groupId + " does not exist in Redis.");
+        }
+    }
+
+
 
     public Tournament getCurrentTournament() throws NoSuchTournamentException {
         return tournamentService.getCurrentTournament();

@@ -14,6 +14,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.LevelNotHighEnoughException;
@@ -36,6 +38,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @SpringBootTest
+@ActiveProfiles("test")
 public class BackendServiceTest {
 
     private BackendService backendService;
@@ -58,16 +61,17 @@ public class BackendServiceTest {
 
     @Autowired
     TournamentScheduler tournamentScheduler;
-
+    
+    @Autowired
+    private RedisTemplate<String,Object> realtimeleaderboard;
 
     @BeforeEach
     public void startService() { 
         this.tournamentService = new TournamentService(tournamentRepository, userRepository, groupRepository, entryRepository);
         this.userService = new UserService(userRepository);
         this.tournamentScheduler = new TournamentScheduler(tournamentService);
-        this.backendService = new BackendService(this.userService,this.tournamentService);
+        this.backendService = new BackendService(this.userService,this.tournamentService, this.realtimeleaderboard);
     }
-
 
     @Test
     public void startUpTest() {

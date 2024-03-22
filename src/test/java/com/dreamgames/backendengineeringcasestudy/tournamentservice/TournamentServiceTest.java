@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentEntryRepository;
@@ -41,6 +42,9 @@ public class TournamentServiceTest {
 
     @Autowired
     TournamentScheduler tournamentScheduler;
+
+    @Autowired
+    RedisTemplate<String,Object> redisTemplate;
 
 
     @BeforeEach
