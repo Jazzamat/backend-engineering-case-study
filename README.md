@@ -13,7 +13,7 @@ To acheive this i've...
 
 
 ### Architecture
-![image](https://github.com/Jazzamat/backend-engineering-case-study/architecture.png)
+![image](https://github.com/Jazzamat/backend-engineering-case-study/blob/main/architecture.png)
 
 
 # backend-engineering-case-study
