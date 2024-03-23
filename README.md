@@ -1,3 +1,4 @@
+
 # Backend Engineering Case Study
 
 This repository contains my sollution for the dream games backend software engineer case study:
@@ -12,7 +13,7 @@ To acheive this i've...
 
 
 ### Architecture
-
+![image](https://github.com/Jazzamat/backend-engineering-case-study/architecture.png)
 
 
 # backend-engineering-case-study
