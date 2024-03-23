@@ -107,10 +107,10 @@ public class BackendController {
         return emitter;
     }
 
-    @GetMapping("tournaments/subscribe/leaderboard/group/{groupId}")
-    public SseEmitter subscibeToGroupLeaderBoardUpdates(@PathVariable Long groupId) {
+    @GetMapping("tournaments/subscribe/leaderboard/group")
+    public SseEmitter subscibeToGroupLeaderBoardUpdates(@RequestParam("groupId") Long groupId) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        backendService.addEmitter("groupId", emitter);
+        backendService.addEmitter(groupId, emitter);
         try {
             emitter.send(SseEmitter.event().name("test-event").data("SSE connection established successfully!"));
         } catch (IOException e) {

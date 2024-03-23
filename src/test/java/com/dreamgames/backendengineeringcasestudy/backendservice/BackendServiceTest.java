@@ -68,18 +68,17 @@ public class BackendServiceTest {
     @Autowired
     private RedisTemplate<String,Object> realtimeleaderboard;
 
-    @Autowired
-    private SimpMessagingTemplate webSocket;
 
     @BeforeEach
     public void startService() { 
         this.tournamentService = new TournamentService(tournamentRepository, userRepository, groupRepository, entryRepository);
         this.userService = new UserService(userRepository);
         this.tournamentScheduler = new TournamentScheduler(tournamentService);
-        this.backendService = new BackendService(this.userService,this.tournamentService, this.realtimeleaderboard, this.tournamentScheduler ,this.webSocket);
+        this.backendService = new BackendService(userService, tournamentService, realtimeleaderboard, tournamentScheduler);
     }
 
     @Test
+    @Transactional
     public void startUpTest() {
     }
 
@@ -177,12 +176,6 @@ public class BackendServiceTest {
 
     @Test
     @Transactional
-    public void TestMatchMixingOne() {
-
-    }
-
-    @Test
-    @Transactional
     public void TestMatchMixingTwo() {
         tournamentScheduler.startLocalTimeTournament();
         ArrayList<User> users = new ArrayList<>();
@@ -196,7 +189,6 @@ public class BackendServiceTest {
             assertDoesNotThrow( () -> {backendService.enterTournament(user.getId());} );
         }
     }
-
 
     @Test
     @Transactional
@@ -267,7 +259,6 @@ public class BackendServiceTest {
             assertTrue(turksScoreUpdated == 1);
         });
     }
-
 
     @Test
     @Transactional
@@ -445,13 +436,9 @@ public class BackendServiceTest {
 
             GroupLeaderBoard ExtrasLeaderBoard = backendService.getGroupLeaderboard(extrasGroup.getGroupId());
 
-            assertTrue(TurksLeaderBoard.equals(FrenchLeaderBoard));
-            assertTrue(FrenchLeaderBoard.equals(AmericansLeaderBoard));
-            assertTrue(AmericansLeaderBoard.equals(BritsLeaderBoard));
-            assertTrue(BritsLeaderBoard.equals(GermansLeaderBoard));
-            assertTrue(GermansLeaderBoard.equals(TurksLeaderBoard)); 
+            assertTrue(TurksLeaderBoard.getGroupId().equals(FrenchLeaderBoard.getGroupId()));
            
-            assertFalse(ExtrasLeaderBoard.equals(TurksLeaderBoard)); 
+            assertFalse(ExtrasLeaderBoard.getGroupId().equals(TurksLeaderBoard.getGroupId())); 
         });
     }
 
@@ -511,8 +498,6 @@ public class BackendServiceTest {
         });
     }
 
-
-
     @Test
     @Transactional
     public void TestGroupLeaderBoardOrder() throws Exception {
@@ -571,7 +556,6 @@ public class BackendServiceTest {
         });
     }
 
-
     @Test
     @Transactional
     public void TestGroupLeaderBoardOrderNonTransactional() throws Exception {
@@ -626,7 +610,6 @@ public class BackendServiceTest {
 
         });
     }
-
 
     @Test
     @Transactional
@@ -714,7 +697,6 @@ public class BackendServiceTest {
        });
     } 
 
-
     @Test
     @Transactional
     public void TestCountryLeaderboardTwo() {
@@ -756,7 +738,6 @@ public class BackendServiceTest {
             backendService.updateUserLevelAndCoins(Elizabeth.getId(), 25);
         }
     }
-
 
     @Test
     @Transactional

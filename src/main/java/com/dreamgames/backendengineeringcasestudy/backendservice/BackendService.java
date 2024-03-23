@@ -42,15 +42,12 @@ public class BackendService {
     @Autowired
     private final RedisTemplate<String,Object> realtimeleaderboard; //TODO maybe I need to make this a list of templates. or maybe have one for counrty one for group
 
-    @Autowired
-    private SimpMessagingTemplate webSocket;
 
-    public BackendService(UserService userService, TournamentService tournamentService, RedisTemplate<String,Object> realtimeleaderboard, TournamentScheduler tournamentScheduler, SimpMessagingTemplate webSocket) {
+    public BackendService(UserService userService, TournamentService tournamentService, RedisTemplate<String,Object> realtimeleaderboard, TournamentScheduler tournamentScheduler) {
         this.userService = userService;
         this.tournamentService = tournamentService;
         this.realtimeleaderboard = realtimeleaderboard;
         this.tournamentScheduler = tournamentScheduler;
-        this.webSocket = webSocket;
     }
 
     /**
@@ -308,12 +305,11 @@ public class BackendService {
     public void broadCastCountryLeaderboardUpdate() {
         System.out.println("BROADCASTING UPDATE TO COUNTRY LEADERBOARD");
         try {
-            broadCastUpdate("counrty",getCountryLeaderboard(tournamentService.getCurrentTournamentId()));
+            broadCastUpdate("country",getCountryLeaderboard(tournamentService.getCurrentTournamentId()));
         } catch (Exception e) {
             System.out.println("couldn't broadcast: " + e);
         }
     }
-
 
     public Tournament getCurrentTournament() throws NoSuchTournamentException {
         return tournamentService.getCurrentTournament();

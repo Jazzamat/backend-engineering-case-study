@@ -42,9 +42,9 @@ services:
     container_name: redisdb
     ports:
       - '6379:6379'
+    command: redis-server --appendonly yes 
     # networks:
     #   - 'local-network'
-    # command: redis-server --appendonly yes 
 
   frontend:
     build:
@@ -52,7 +52,7 @@ services:
       dockerfile: Dockerfile
     container_name: leaderboard-frontend
     ports:
-      - '3000:3000' # Expose on port 8081 to avoid conflict with backend
+      - '3000:3000'
     # networks:
     #   - 'local-network'
 

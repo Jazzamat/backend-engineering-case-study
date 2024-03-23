@@ -7,14 +7,12 @@ COPY pom.xml .
 COPY src ./src
 EXPOSE 8080
 # Build application and skip tests initially
-RUN mvn clean package -Dmaven.test.skip 
+RUN mvn clean package 
 
 # Recompile and run tests
 # RUN mvn compile test-compile && mvn test
 
-
  # run with -Dmaven.test.skip if you need to run it without tests
-
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
