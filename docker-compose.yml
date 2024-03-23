@@ -12,8 +12,10 @@ services:
         condition: service_healthy
     ports:
       - '8080:8080'
-    networks:
-      - 'local-network'
+    links:
+      - redisdb
+    # networks:
+    #   - 'local-network'
 
   mysqldb:
     image: mysql:8.0.28-oracle
@@ -24,8 +26,8 @@ services:
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
-    networks:
-      - 'local-network'
+    # networks:
+    #   - 'local-network'
     ports:
       - '3306:3306'
     volumes:
@@ -35,19 +37,29 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "mysqldb", "-u", "user", "-ppassword"]
       retries: 10
 
-  redisdb: # Redis service definition
+  redisdb: 
     image: redis:latest
     container_name: redisdb
     ports:
       - '6379:6379'
-    networks:
-      - 'local-network'
-    command: redis-server --appendonly yes # Enable AOF persistence
+    # networks:
+    #   - 'local-network'
+    # command: redis-server --appendonly yes 
+
+  frontend:
+    build:
+      context: ./fe_src
+      dockerfile: Dockerfile
+    container_name: leaderboard-frontend
+    ports:
+      - '3000:3000' # Expose on port 8081 to avoid conflict with backend
+    # networks:
+    #   - 'local-network'
 
 volumes:
   case-mysql-data:
 
 
-networks:
-  local-network:
-    driver: bridge
+# networks:
+#   local-network:
+#     driver: bridge

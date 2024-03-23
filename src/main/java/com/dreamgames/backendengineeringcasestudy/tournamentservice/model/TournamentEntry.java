@@ -32,7 +32,8 @@ public class TournamentEntry {
 	}
 
 	public int incrementScore() {
-		return this.score++;
+		this.score++;
+		return this.score;
 	}
 
 	public boolean groupHasBegun() {

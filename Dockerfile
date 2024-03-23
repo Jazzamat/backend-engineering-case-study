@@ -5,7 +5,7 @@ FROM maven:3.8.8-eclipse-temurin-17 AS Builder
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-
+EXPOSE 8080
 # Build application and skip tests initially
 RUN mvn clean package -Dmaven.test.skip 
 
