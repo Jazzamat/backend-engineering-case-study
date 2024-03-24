@@ -11,6 +11,8 @@ import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
 
+import jakarta.transaction.Transactional;
+
 
 @SpringBootTest
 public class UserServiceTest {
@@ -26,6 +28,7 @@ public class UserServiceTest {
     }
 
     @Test
+    @Transactional
     public void basicCreateUserTestOne() {
         User testUser = userService.createUser("testUser");
         User gottenUser = userService.getUser(testUser.getId());
@@ -33,6 +36,7 @@ public class UserServiceTest {
     }
 
     @Test
+    @Transactional
     public void basicCreateUserTestTwo() {
         User testUser = userService.createUser("testUser");
         User testUser2 = userService.createUser("testUser2");
@@ -48,6 +52,7 @@ public class UserServiceTest {
     }
 
     @Test
+    @Transactional
     public void basicUserLevelUpdateTestOne() {
         User testUser = userService.createUser("testUser");
         assertEquals(testUser.getCoins(), 5000);

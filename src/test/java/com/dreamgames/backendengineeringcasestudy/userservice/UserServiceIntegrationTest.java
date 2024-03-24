@@ -17,6 +17,7 @@ public class UserServiceIntegrationTest {
     private UserService userService;
 
     @Test
+    @Transactional
     public void testCreateUser() {
         User newUser = userService.createUser("testUser");
     }

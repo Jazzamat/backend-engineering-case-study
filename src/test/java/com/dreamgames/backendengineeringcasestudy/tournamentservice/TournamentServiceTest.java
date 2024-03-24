@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentEntryRepository;
@@ -18,6 +19,8 @@ import com.dreamgames.backendengineeringcasestudy.tournamentservice.service.Tour
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.service.TournamentService;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
+
+import jakarta.transaction.TransactionScoped;
 
 
 
@@ -56,7 +59,9 @@ public class TournamentServiceTest {
     }
 
     @Test 
+    @Transactional
     public void getCurrentTournament() throws NoSuchTournamentException {
+        tournamentScheduler.startLocalTimeTournament();
         assertDoesNotThrow( () -> {tournamentService.getCurrentTournament();});
         assertNotNull(tournamentService.getCurrentTournament());
     }

@@ -1,3 +1,4 @@
+
 package com.dreamgames.backendengineeringcasestudy.tournamentservice.service;
 
 import java.time.LocalDateTime;
@@ -8,7 +9,6 @@ import java.util.stream.IntStream;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
@@ -29,6 +29,16 @@ import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRep
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * The TournamentService class provides methods for managing tournaments and tournament entries.
+ * It allows creating tournaments, entering tournaments, incrementing entry scores, retrieving leaderboards,
+ * and claiming rewards.
+ * 
+ * This class is responsible for interacting with the TournamentRepository, TournamentGroupRepository,
+ * TournamentEntryRepository, and UserRepository to perform the necessary operations.
+ * 
+ * @author E. Omer Gul
+ */
 @Service
 public class TournamentService {
     
@@ -47,7 +57,13 @@ public class TournamentService {
         this.tournamentGroupRepository = tournamentGroupRepository;
         this.tournamentEntryRepository = tournamentEntryRepository;
     }
-
+    
+    /**
+     *
+     * @param startTime
+     * @param endTime
+     * @return
+     */
     public Tournament createTournament(LocalDateTime startTime, LocalDateTime endTime) {
         Tournament tournament = new Tournament(startTime, endTime);
         tournamentRepository.save(tournament);
@@ -58,6 +74,12 @@ public class TournamentService {
         return;
     }
 
+
+    /**
+     * Gets the current tournament   
+     * @return
+     * @throws NoSuchTournamentException
+     */     
     @Cacheable("currentTournament")
     public Tournament getCurrentTournament() throws NoSuchTournamentException {
         LocalDateTime now = LocalDateTime.now();
@@ -69,7 +91,11 @@ public class TournamentService {
     public Long getCurrentTournamentId() throws NoSuchTournamentException {
         return getCurrentTournament().getId();
     }
-
+    /**
+     * Checks if the tournament has ended
+     * @param tournamentId
+     * @return true if the tournament has ended, false if is still on going
+     */
     public boolean hasEnded(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(() -> new EntityNotFoundException("No such tournament"));
         return tournament.hasEnded();
@@ -93,6 +119,13 @@ public class TournamentService {
         return Pair.with(score, id);
     }
   
+
+    /**
+     * Allows a user to enter the current tournament and returns the current group leaderboard
+     * @param user
+     * @return
+     * @throws Exception
+     */
     public GroupLeaderBoard enterTournament(User user) throws Exception { // TODO maybe can refactor to make look nicer 
         Tournament currentTournament = getCurrentTournament();
         if (tournamentEntryRepository.existsByUserIdAndTournamentId(user.getId(), currentTournament.getId())) {
@@ -117,6 +150,11 @@ public class TournamentService {
         return groupLeaderBoard;
     }
 
+    /**
+     * Queries the data base and gets the leader board for the given group
+     * @param groupId
+     * @return
+     */
     public GroupLeaderBoard getGroupLeaderboard(Long groupId) {
         List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByTournamentGroupIdOrderByScoreDesc(groupId);
         List<Pair<User,Integer>> pairs = new ArrayList<>();
@@ -127,6 +165,12 @@ public class TournamentService {
         return new GroupLeaderBoard(pairs, groupId);
     }
 
+    /**
+     * Queries the database and gets the country leaderboard for the given tournament
+     * @param tournamentId
+     * @return
+     * @throws NoSuchTournamentException
+     */
     public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException {
         List<Pair<User.Country,Integer>> countryLeaderBoard = new ArrayList<>();
         for (User.Country country : User.Country.values()) {
@@ -139,6 +183,14 @@ public class TournamentService {
         return countryLeaderBoard;
     }
 
+    /**
+     * Queries the the database to find the rank of the player for the given tournament;
+     * @param userId
+     * @param tournamentId
+     * @return
+     * @throws EntityNotFoundException
+     * @throws TournamentGroupHasNotBegunException
+     */
     public int getGroupRank(Long userId, Long tournamentId) throws EntityNotFoundException, TournamentGroupHasNotBegunException {
         TournamentEntry usersEntry = tournamentEntryRepository.findByUserIdAndTournamentId(userId, tournamentId)
             .orElseThrow(() -> new EntityNotFoundException("Entry not found for user " + userId + " in tournament " + tournamentId));
@@ -162,11 +214,24 @@ public class TournamentService {
     
         return rank;
     }
-    
+   
+    /**
+     * Claims a reward for a user. Sets the users reward claimed field to true (persistent)
+     * @param userId
+     */
     public void claimReward(Long userId) {
-        TournamentEntry entry = tournamentEntryRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException());
+        TournamentEntry entry = tournamentEntryRepository.findByUserId(userId).orElseThrow(() -> new EntityNotFoundException());
         entry.setRewardClaimed(true);
         tournamentEntryRepository.save(entry);
+    }
+
+
+    // =========== DEV METHODS ======== // 
+
+    public void endTournament(Long tournamentId) throws NoSuchTournamentException {
+        Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(() -> new NoSuchTournamentException("can't end tournament that don't exist"));  
+        tournament.endTournament();
+        tournamentRepository.save(tournament);
     }
 }
     

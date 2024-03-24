@@ -15,6 +15,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 
+/**
+ * Represents a group within a tournament.
+ */
 @Entity
 public class TournamentGroup {
   
@@ -29,13 +32,23 @@ public class TournamentGroup {
     @OrderBy("score DESC")
     private List<TournamentEntry> entries = new ArrayList<TournamentEntry>();
 
+  
     public TournamentGroup() {
     }
 
+    /**
+     * Constructor with tournament parameter.
+     * @param tournament The tournament associated with the group.
+     */
     public TournamentGroup(Tournament tournament) {
         this.tournament = tournament;
     }
 
+    /**
+     * Adds a user to the group.
+     * @param user The user to add.
+     * @return true if the user was successfully added, false otherwise.
+     */
     public boolean addUser(User user) {
         if (entries.size() == 5) {
             return false;
@@ -47,46 +60,22 @@ public class TournamentGroup {
                 return false;
             }
         }
-
         // TODO check for duplicate entries too
-
         TournamentEntry newEntry = new TournamentEntry(this, user);
         entries.add(newEntry);
         return true;
     }
 
+    /**
+     * Checks if the group has begun.
+     * @return true if the group has begun, false otherwise.
+     */
     public boolean hasBegun() {
         return entries.size() == 5; 
     }
 
-    // public List<User> getGroupLeaderboard() {
-    //    List<User> users = new ArrayList<>();    
-    //    entries.stream().sorted().forEach((x) -> users.add(x.getUser()));
-    //    return users;
-    // }
-
 	public Long getId() {
 		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public Tournament getTournament() {
-		return tournament;
-	}
-
-	public void setTournament(Tournament tournament) {
-		this.tournament = tournament;
-	}
-
-	public List<TournamentEntry> getEntries() {
-		return entries;
-	}
-
-	public void setEntries(List<TournamentEntry> entries) {
-		this.entries = entries;
 	}
 
     @Override
@@ -115,7 +104,4 @@ public class TournamentGroup {
             return false;
         return true;
     }
-   
-    
-
 }

@@ -21,7 +21,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.HasUnclaimedRewards;
 import com.dreamgames.backendengineeringcasestudy.exceptions.LevelNotHighEnoughException;
+import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.NotEnoughFundsException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.TournamentGroupHasNotBegunException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.GroupLeaderBoard;
@@ -317,77 +319,71 @@ public class BackendServiceTest {
         });   
     }
 
-//     @Test
-//     @Transactional
-//     public void TestGetGroupLeaderBoardOne() throws Exception {
-//         User user = backendService.createUser("testUserForGetGroup");
-//         for (int i = 0; i < 20; i++) { // Level up to 20
-//             backendService.updateUserLevelAndCoins(user.getId(), 25);
-//         }
-//         assertDoesNotThrow( () -> {
-//             GroupLeaderBoard groupLeaderBoard = backendService.enterTournament(user.getId());
-//             assertDoesNotThrow(() -> {
-//                 backendService.getGroupLeaderboard(groupLeaderBoard.getGroupId());
+    @Test
+    @Transactional
+    public void TestGetGroupLeaderBoardOne() throws Exception {
+        tournamentScheduler.startLocalTimeTournament();
+        User user = backendService.createUser("testUserForGetGroup");
+        for (int i = 0; i < 20; i++) { // Level up to 20
+            backendService.updateUserLevelAndCoins(user.getId(), 25);
+        }
+        assertDoesNotThrow( () -> {
+            GroupLeaderBoard groupLeaderBoard = backendService.enterTournament(user.getId());
+            assertDoesNotThrow(() -> {
+                backendService.getGroupLeaderboard(groupLeaderBoard.getGroupId());
             
             
-//             });
-//         });
-//     }
+            });
+        });
+    }
 
 
 
-//     @Test
-//     @Transactional
-//     public void TestGetGroupLeaderBoardTwo() throws Exception {
-//         User turkish = new User("Kemal", User.Country.TURKEY);
-//         User french = new User("Julien", User.Country.FRANCE); 
-//         User american = new User("Bob", User.Country.USA);
-//         User british = new User("Charles", User.Country.UK);
-//         User german = new User("Johanes", User.Country.GERMANY);
+    @Test
+    @Transactional
+    public void TestGetGroupLeaderBoardTwo() throws Exception {
+        tournamentScheduler.startLocalTimeTournament();
+        User turkish = new User("Kemal", User.Country.TURKEY);
+        User french = new User("Julien", User.Country.FRANCE); 
+        User american = new User("Bob", User.Country.USA);
+        User british = new User("Charles", User.Country.UK);
+        User german = new User("Johanes", User.Country.GERMANY);
 
-//         User turkishR = userRepository.save(turkish);
-//         User frenchR = userRepository.save(french);
-//         User americanR = userRepository.save(american);
-//         User britishR = userRepository.save(british);
-//         User germanR = userRepository.save(german);
+        User turkishR = userRepository.save(turkish);
+        User frenchR = userRepository.save(french);
+        User americanR = userRepository.save(american);
+        User britishR = userRepository.save(british);
+        User germanR = userRepository.save(german);
 
-//         for (int i = 0; i < 20; i++) { // Level up to 20
-//             backendService.updateUserLevelAndCoins(turkish.getId(), 25);
-//             backendService.updateUserLevelAndCoins(french.getId(), 25);
-//             backendService.updateUserLevelAndCoins(american.getId(), 25);
-//             backendService.updateUserLevelAndCoins(british.getId(), 25);
-//             backendService.updateUserLevelAndCoins(german.getId(), 25);
-//         }
+        for (int i = 0; i < 20; i++) { // Level up to 20
+            backendService.updateUserLevelAndCoins(turkish.getId(), 25);
+            backendService.updateUserLevelAndCoins(french.getId(), 25);
+            backendService.updateUserLevelAndCoins(american.getId(), 25);
+            backendService.updateUserLevelAndCoins(british.getId(), 25);
+            backendService.updateUserLevelAndCoins(german.getId(), 25);
+        }
 
-//         assertDoesNotThrow( () -> {
-//             TournamentGroup turksGroup = backendService.enterTournament(turkishR.getId());
-//             TournamentGroup frenchmansGroup = backendService.enterTournament(frenchR.getId());
-//             TournamentGroup americansGroup = backendService.enterTournament(americanR.getId());
-//             TournamentGroup britsGroup = backendService.enterTournament(britishR.getId());
-//             TournamentGroup germansGroup = backendService.enterTournament(germanR.getId());
+        assertDoesNotThrow( () -> {
+            GroupLeaderBoard turksGroup = backendService.enterTournament(turkishR.getId());
+            GroupLeaderBoard frenchmansGroup = backendService.enterTournament(frenchR.getId());
+            GroupLeaderBoard americansGroup = backendService.enterTournament(americanR.getId());
+            GroupLeaderBoard britsGroup = backendService.enterTournament(britishR.getId());
+            GroupLeaderBoard germansGroup = backendService.enterTournament(germanR.getId());
 
-//             assertTrue(turksGroup.equals(frenchmansGroup));
-//             assertTrue(frenchmansGroup.equals(americansGroup));
-//             assertTrue(americansGroup.equals(britsGroup));
-//             assertTrue(britsGroup.equals(germansGroup));
-
+            assertTrue(turksGroup.getGroupId().equals(frenchmansGroup.getGroupId()));
+            assertTrue(britsGroup.getGroupId().equals(germansGroup.getGroupId()));
            
-//             List<Pair<User,Integer>> TurksLeaderBoard = backendService.getGroupLeaderboard(turksGroup.getId());
-//             List<Pair<User,Integer>> FrenchLeaderBoard = backendService.getGroupLeaderboard(frenchmansGroup.getId());
-//             List<Pair<User,Integer>> AmericansLeaderBoard = backendService.getGroupLeaderboard(americansGroup.getId());
-//             List<Pair<User,Integer>> BritsLeaderBoard = backendService.getGroupLeaderboard(britsGroup.getId());
-//             List<Pair<User,Integer>> GermansLeaderBoard = backendService.getGroupLeaderboard(germansGroup.getId());          
+            GroupLeaderBoard TurksLeaderBoard = backendService.getGroupLeaderboard(turksGroup.getGroupId());
+            GroupLeaderBoard FrenchLeaderBoard = backendService.getGroupLeaderboard(frenchmansGroup.getGroupId());
+            GroupLeaderBoard AmericansLeaderBoard = backendService.getGroupLeaderboard(americansGroup.getGroupId());
+            GroupLeaderBoard BritsLeaderBoard = backendService.getGroupLeaderboard(britsGroup.getGroupId());
+            GroupLeaderBoard GermansLeaderBoard = backendService.getGroupLeaderboard(germansGroup.getGroupId());          
 
-
-//             assertTrue(TurksLeaderBoard.equals(FrenchLeaderBoard));
-//             assertTrue(FrenchLeaderBoard.equals(AmericansLeaderBoard));
-//             assertTrue(AmericansLeaderBoard.equals(BritsLeaderBoard));
-//             assertTrue(BritsLeaderBoard.equals(GermansLeaderBoard));
-//             assertTrue(GermansLeaderBoard.equals(TurksLeaderBoard)); 
+            assertTrue(FrenchLeaderBoard.getGroupId().equals(AmericansLeaderBoard.getGroupId()));
+            assertTrue(BritsLeaderBoard.getGroupId().equals(GermansLeaderBoard.getGroupId()));
             
-            
-//         });
-//     }
+        });
+    }
 
     @Test
     @Transactional
@@ -852,6 +848,155 @@ public class BackendServiceTest {
                 backendService.getGroupRank(newTurkishuserR.getId(), currTournament.getId());
             });
         });
+    }
+
+
+    @Test
+    @Transactional
+    public void TestWin() {
+        Tournament tournament = tournamentScheduler.startLocalTimeTournament();
+        User turkish = new User("Kemal", User.Country.TURKEY);
+        User french = new User("Julien", User.Country.FRANCE); 
+        User american = new User("Bob", User.Country.USA);
+        User british = new User("Charles", User.Country.UK);
+        User german = new User("Johanes", User.Country.GERMANY);
+
+        User turkishR = userRepository.save(turkish);
+        User frenchR = userRepository.save(french);
+        User americanR = userRepository.save(american);
+        User britishR = userRepository.save(british);
+        User germanR = userRepository.save(german);
+
+        for (int i = 0; i < 20; i++) { // Level up to 20
+            backendService.updateUserLevelAndCoins(turkish.getId(), 25);
+            backendService.updateUserLevelAndCoins(french.getId(), 25);
+            backendService.updateUserLevelAndCoins(american.getId(), 25);
+            backendService.updateUserLevelAndCoins(british.getId(), 25);
+            backendService.updateUserLevelAndCoins(german.getId(), 25);
+        }
+
+
+        assertDoesNotThrow( () -> {
+            backendService.enterTournament(turkishR.getId());
+            backendService.enterTournament(frenchR.getId());
+            backendService.enterTournament(americanR.getId());
+            backendService.enterTournament(britishR.getId());
+            backendService.enterTournament(germanR.getId());
+
+            for (int i = 0; i < 2; i++) {
+                backendService.updateUserLevelAndCoins(german.getId(), 25); // the german is ahead by one
+            }
+            for (int i = 0; i < 1; i++) {
+                backendService.updateUserLevelAndCoins(turkish.getId(), 25); // the turk gets runner up 
+            }
+
+            int germanCoinsBeforeWin = userService.getUser(german.getId()).getCoins();
+            int turksihCoinsBeforeWind = userService.getUser(turkish.getId()).getCoins();
+            int frenchCoinsBeforeClaim = userService.getUser(french.getId()).getCoins();
+
+            tournamentScheduler.endTournament(tournament.getId());
+           
+            backendService.claimReward(german.getId(), tournament.getId());
+            backendService.claimReward(turkish.getId(), tournament.getId());
+            backendService.claimReward(french.getId(), tournament.getId());
+
+            int turksihCoinsAfterWin = userService.getUser(turkish.getId()).getCoins();
+            int germanCoinsAfterWin = userService.getUser(german.getId()).getCoins();
+            int frenchCoinsAfterClaim = userService.getUser(french.getId()).getCoins();
+
+            assertTrue(germanCoinsAfterWin - germanCoinsBeforeWin == 10000);
+            assertTrue(turksihCoinsAfterWin - turksihCoinsBeforeWind == 5000);
+            assertTrue(frenchCoinsAfterClaim - frenchCoinsBeforeClaim == 0);
+        });
+    }
+
+    @Test
+    @Transactional
+    public void TestCantEnterNewTournamentWithoutCollectingReward() {
+        Tournament tournament = tournamentScheduler.startLocalTimeTournament();
+        User turkish = new User("Kemal", User.Country.TURKEY);
+        User french = new User("Julien", User.Country.FRANCE); 
+        User american = new User("Bob", User.Country.USA);
+        User british = new User("Charles", User.Country.UK);
+        User german = new User("Johanes", User.Country.GERMANY);
+
+        User turkishR = userRepository.save(turkish);
+        User frenchR = userRepository.save(french);
+        User americanR = userRepository.save(american);
+        User britishR = userRepository.save(british);
+        User germanR = userRepository.save(german);
+
+        for (int i = 0; i < 20; i++) { // Level up to 20
+            backendService.updateUserLevelAndCoins(turkish.getId(), 25);
+            backendService.updateUserLevelAndCoins(french.getId(), 25);
+            backendService.updateUserLevelAndCoins(american.getId(), 25);
+            backendService.updateUserLevelAndCoins(british.getId(), 25);
+            backendService.updateUserLevelAndCoins(german.getId(), 25);
+        }
+
+
+        assertDoesNotThrow( () -> {
+            backendService.enterTournament(turkishR.getId());
+            backendService.enterTournament(frenchR.getId());
+            backendService.enterTournament(americanR.getId());
+            backendService.enterTournament(britishR.getId());
+            backendService.enterTournament(germanR.getId());
+
+            for (int i = 0; i < 2; i++) {
+                backendService.updateUserLevelAndCoins(german.getId(), 25); // the german is ahead by one
+            }
+            for (int i = 0; i < 1; i++) {
+                backendService.updateUserLevelAndCoins(turkish.getId(), 25); // the turk gets runner up 
+            }
+
+            assertThrows(AlreadyInCurrentTournamentException.class, () -> {
+                backendService.enterTournament(german.getId());
+            });
+
+            tournamentService.endTournament(tournament.getId());
+
+            assertThrows(NoSuchTournamentException.class, () -> {
+                backendService.enterTournament(german.getId());
+            });
+
+            Tournament newTournament = tournamentScheduler.startLocalTimeTournament();
+
+            assertThrows(HasUnclaimedRewards.class, () -> {
+                backendService.enterTournament(german.getId());
+            });
+            assertThrows(HasUnclaimedRewards.class, () -> {
+                backendService.enterTournament(turkish.getId());
+            });
+            assertThrows(HasUnclaimedRewards.class, () -> {
+                backendService.enterTournament(french.getId());
+            });
+
+            backendService.claimReward(german.getId(), tournament.getId());
+            backendService.claimReward(turkish.getId(), tournament.getId());
+            backendService.claimReward(french.getId(),tournament.getId());
+
+            assertDoesNotThrow(() -> {
+                backendService.enterTournament(german.getId());
+            });
+            assertDoesNotThrow(() -> {
+                backendService.enterTournament(turkish.getId());
+            });
+            assertDoesNotThrow(() -> {
+                backendService.enterTournament(french.getId());
+            });
+
+
+            assertThrows(AlreadyInCurrentTournamentException.class, () -> {
+                backendService.enterTournament(german.getId());
+            });
+            assertThrows(AlreadyInCurrentTournamentException.class, () -> {
+                backendService.enterTournament(turkish.getId());
+            });
+            assertThrows(AlreadyInCurrentTournamentException.class, () -> {
+                backendService.enterTournament(french.getId());
+            });
+
+        }); 
     }
 
 } 

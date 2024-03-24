@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.transaction.Transactional;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import java.time.LocalDateTime;
@@ -14,6 +13,11 @@ import java.util.Set;
 
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 
+/**
+ * Represents a tournament.
+ * 
+ * @author E. Omer Gul
+ */
 @Entity
 public class Tournament {
     
@@ -24,18 +28,34 @@ public class Tournament {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private Set<TournamentGroup> groups = new HashSet<>();
     
-    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL,fetch = FetchType.EAGER) //TODO see if you can make this lazy 
-    private Set<TournamentGroup> groups = new HashSet<>();  // am I essentially keeping all this in memory?
-    
+     /**
+     * Constructs an empty tournament.
+     */
+    public Tournament() {
+    }
+
+    /**
+     * Constructs a tournament with the specified start and end time.
+     * 
+     * @param startTime the start time of the tournament
+     * @param endTime the end time of the tournament
+     */
     public Tournament(LocalDateTime startTime, LocalDateTime endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
     }
     
-    public Tournament() {
-    }
-    
+    /**
+     * Adds a user to the tournament and returns the group the user is added to.
+     * If no groups exist, a new group is created and the user is added to it.
+     * 
+     * @param user the user to add to the tournament
+     * @return the group the user is added to
+     * @throws Exception if the user cannot be added to any group
+     */
     public TournamentGroup addUser(User user) throws Exception {
         if (groups.isEmpty()) {
             TournamentGroup newGroup = new TournamentGroup(this);
@@ -46,6 +66,14 @@ public class Tournament {
         return MatchMake(user);
     }
     
+    /**
+     * Attempts to add a user to an existing group in the tournament.
+     * If no group can accommodate the user, a new group is created and the user is added to it.
+     * 
+     * @param user the user to add to the tournament
+     * @return the group the user is added to
+     * @throws Exception if the user cannot be added to any group
+     */
     public TournamentGroup MatchMake(User user) throws Exception {
         for (TournamentGroup group : groups) {
             if (group.addUser(user)) {
@@ -60,11 +88,35 @@ public class Tournament {
         }
     }
 
+    /**
+     * Checks if the tournament has ended.
+     * 
+     * @return true if the tournament has ended, false otherwise
+     */
     public boolean hasEnded() {
         return LocalDateTime.now().isAfter(endTime);
     }
+
+    /**
+     * Checks if the tournament has begun.
+     * 
+     * @return true if the tournament has begun, false otherwise
+     */
+    public boolean hasBegun() {
+        return LocalDateTime.now().isAfter(startTime);
+    }
     
+    /**
+     * Returns the ID of the tournament.
+     * 
+     * @return the ID of the tournament
+     */
     public Long getId() {
         return id;
     }
+
+    public void endTournament() {
+        this.endTime = LocalDateTime.now();
+    }
+
 }

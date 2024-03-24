@@ -46,16 +46,6 @@ services:
     # networks:
     #   - 'local-network'
 
-  frontend:
-    build:
-      context: ./fe_src
-      dockerfile: Dockerfile
-    container_name: leaderboard-frontend
-    ports:
-      - '3000:3000'
-    # networks:
-    #   - 'local-network'
-
 volumes:
   case-mysql-data:
 

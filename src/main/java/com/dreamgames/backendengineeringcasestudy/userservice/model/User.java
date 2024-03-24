@@ -8,14 +8,28 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
 
+/**
+ * Represents a user for this application.
+ * 
+ * This class represents a user in the application. It contains information such as the user's ID, username, coins, level, and country.
+ * Users can deduct fees, claim rewards, and update their level and coins.
+ * 
+ * The User class also defines an inner enum class called Country, which represents the country of the user.
+ * 
+ * This class is annotated with the @Entity annotation, indicating that it is a persistent entity in the database.
+ * 
+ * @author E. Omer Gul 
+ */
 @Entity
 public class User {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	private String username;
 	private int coins = 5000;
 	private int level = 1;
+	private static final int TOURNAMENT_ENTRY_FEE = 1000;
     private static final int FIRST_PLACE_WIN = 10000;
     private static final int SECOND_PLACE_WIN = 5000;
 
@@ -25,6 +39,12 @@ public class User {
 
 	public static enum Country {
 		TURKEY, USA, UK, FRANCE, GERMANY;
+		
+		/**
+		 * Returns a random country from the available countries.
+		 * 
+		 * @return a random country
+		 */
 		public static Country getRandomCountry() {
 			Random random = new Random();
 			return values()[random.nextInt(values().length)];
@@ -34,42 +54,57 @@ public class User {
 	public User() {
 	}
 
+	/**
+	 * Constructs a new User object with the specified username and country.
+	 * 
+	 * @param username the username of the user
+	 * @param country the country of the user
+	 */
 	public User(String username, Country country) {
 		this.username = username;
 		this.country = country;
 	}
 
 	/**
+	 * Deducts a fee of 1000 coins from the user's balance.
+	 * 
 	 * @precondition coins >= 1000
-	 * @postconditoin coins >= 0
-	*/
+	 * @postcondition coins >= 0
+	 */
 	public void deductFee() {
-		this.coins = this.coins - 1000;
+		this.coins = this.coins - TOURNAMENT_ENTRY_FEE;
 	}
 
 	/**
-	 *	Claims reward based on what the rank is
-	 * @param rank
+	 * Claims a reward based on the user's rank.
+	 * If the rank is 1, the user receives a reward of FIRST_PLACE_WIN coins.
+	 * If the rank is 2, the user receives a reward of SECOND_PLACE_WIN coins.
+	 * 
+	 * @param rank the rank of the user
 	 */
 	public void claimReward(int rank) {
 		if (rank == 1) {
             setCoins(coins + FIRST_PLACE_WIN);
         } else if (rank == 2) {
-			setCoins(SECOND_PLACE_WIN);
+			setCoins(coins + SECOND_PLACE_WIN);
         }
 	}
 
-	public void updateLevelAndCoins(int cointsToAdd) {
+	/**
+	 * Updates the user's level and coins by the specified amount.
+	 * The level is incremented by 1, and the coins are increased by the specified amount.
+	 * 
+	 * @param coinsToAdd the amount of coins to add
+	 */
+	public void updateLevelAndCoins(int coinsToAdd) {
 		setLevel(getLevel() + 1); 
-        setCoins(getCoins() + cointsToAdd);
+        setCoins(getCoins() + coinsToAdd);
 	}
+
+	// Getters and Setters
 
 	public Long getId() {
 		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public String getUsername() {

@@ -1,15 +1,16 @@
+
 package com.dreamgames.backendengineeringcasestudy.backendservice;
 
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.NoSuchTournamentException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.TournamentGroupHasNotBegunException;
@@ -20,16 +21,17 @@ import com.dreamgames.backendengineeringcasestudy.tournamentservice.service.Tour
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.service.TournamentService;
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import jakarta.persistence.EntityNotFoundException;
 
-import java.nio.file.attribute.GroupPrincipal;
-import java.time.Duration;
-
-
+/**
+ * This class represents the backend service for the DreamGames application.
+ * It provides various methods for user management, tournament participation, leaderboard retrieval, and real-time updates.
+ * The service interacts with the UserService, TournamentService, and RedisTemplate to perform its operations.
+ * 
+ * @author E.Omer Gul
+ * 
+ */
 @Service
 public class BackendService {
     
@@ -68,10 +70,10 @@ public class BackendService {
     public User updateUserLevelAndCoins(Long userId, int cointsToAdd) {
         try {
             Pair<Integer,Long> scoreAndgroupId = tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId());
-            System.out.println("UPDATING USER SCORE TO :" + scoreAndgroupId.getValue0());
+            System.out.println("UPDATING USER SCORE TO :" + scoreAndgroupId.getValue0()); // TODO delete debug statemetn
             updateRedisGroupLeaderboard(scoreAndgroupId.getValue1(),userId, scoreAndgroupId.getValue0());
             updateRedisCountryLeaderBoard(userService.retreiveUsersCountry(userId));
-        } catch (TournamentGroupHasNotBegunException e) {
+        } catch (TournamentGroupHasNotBegunException e) { // TOOD: nottin?
             // do nothin 
         } catch (NoSuchTournamentException e) {
             // do nothin 
@@ -129,43 +131,7 @@ public class BackendService {
      * @return
      */
     public GroupLeaderBoard getGroupLeaderboard(Long groupId) { // TODO test some more now that we have score in there too
-       // TODO REFACTOR AWAY REDIS LOGIC TO ANOTHER CLASS 
-        System.out.println("GETTING GROUP LEADER BOARD");
-        String redisKey = "leaderboard:group:" + groupId;
-        Boolean exists = realtimeleaderboard.hasKey(redisKey);
-        if (exists == null || !exists) {
-            System.out.println("FIRST CALL SO NO REDIS");
-            GroupLeaderBoard groupLeaderBoard = tournamentService.getGroupLeaderboard(groupId); // this call queries the database
-            groupLeaderBoard.getLeaderboard().forEach(pair -> {
-                realtimeleaderboard.opsForZSet().add(redisKey, pair.getValue0().getId() + ":" + pair.getValue1(), pair.getValue1());
-            });
-            realtimeleaderboard.expire(redisKey,Duration.ofHours(1));
-            return groupLeaderBoard;
-        } else {
-            System.out.println("REDIS ALREADY EXISTS SO PULLING FROM CACHE");
-            Set<Object> leaderboardData = realtimeleaderboard.opsForZSet().reverseRange(redisKey, 0, -1);
-            List<Pair<User,Integer>> leaderboard = new ArrayList<>();
-            leaderboardData.forEach(item -> {
-                if (item instanceof String) {
-                    String[] parts = ((String) item).split(":");
-                    if (parts.length == 2) {
-                        try {
-                            Long userId = Long.parseLong(parts[0]);
-                            Integer score = Integer.parseInt(parts[1]);
-                            User user = userService.getUser(userId);
-                            if (user != null) {
-                                leaderboard.add(Pair.with(user, score));
-                            } else {
-                                System.out.println("User not found for ID: " + userId);
-                            }
-                        } catch (NumberFormatException ex) {
-                            System.out.println("Error parsing userID or score from: " + item);
-                        }
-                    }
-                }
-            });
-            return new GroupLeaderBoard(leaderboard, groupId);
-        }
+        return Redis.redisGetGroupLeaderboard(groupId, realtimeleaderboard, tournamentService, userService);
     }
     
     /**
@@ -175,40 +141,28 @@ public class BackendService {
      * @return
      */
     public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException { // TODO test some more now that you have changed it arround 
-        String redisKey = "leaderboard:country";
-       // TODO REFACTOR AWAY REDIS LOGIC TO ANOTHER CLASS 
-        // Check if the leaderboard exists in Redis
-        Boolean exists = realtimeleaderboard.hasKey(redisKey);
-        if (exists == null || !exists) {
-            System.out.println("First call so no Redis, generating country leaderboard...");
-    
-            // Use the existing service method to generate the initial leaderboard
-            List<Pair<User.Country, Integer>> initialLeaderboard = tournamentService.getCountryLeaderboard(tournamentId);
-    
-            // Save each country's score to Redis
-            initialLeaderboard.forEach(pair -> {
-                String country = pair.getValue0().name();
-                Integer score = pair.getValue1();
-                realtimeleaderboard.opsForZSet().add(redisKey, country, score.doubleValue());
-            });
-    
-            return initialLeaderboard;
-        } else {
-            System.out.println("Redis already exists, pulling from cache...");
-    
-            // Retrieve the leaderboard from Redis
-            Set<Object> leaderboardData = realtimeleaderboard.opsForZSet().reverseRange(redisKey, 0, -1);
-            List<Pair<User.Country, Integer>> leaderboard = new ArrayList<>();
-            
-            leaderboardData.forEach(item -> {
-                String countryName = (String) item;
-                Double score = realtimeleaderboard.opsForZSet().score(redisKey, item);
-                leaderboard.add(Pair.with(User.Country.valueOf(countryName), score.intValue()));
-            });
-    
-            return leaderboard;
+        return Redis.redisGetCountryLeaderboard(realtimeleaderboard, tournamentService, tournamentId);
+    }
+
+
+    // =========== REDIS HELPER MEHTODS ============== //
+
+    private void updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore) { // Could refactor this away to a helper class
+        if(Redis.updateRedisGroupLeaderboard(groupId, userId, newScore, realtimeleaderboard)) {
+            broadCastGroupLeaderBoardUpdate(groupId);
         }
     }
+
+    /**
+     * Assumes level change is just plus one per call
+     * @param country
+     */
+    public void updateRedisCountryLeaderBoard(User.Country country) {
+        if (Redis.updateRedisCountryLeaderBoard(country, realtimeleaderboard)) {
+            broadCastCountryLeaderboardUpdate();
+        }
+    }
+
 
     // ========== REAL TIME (SSE) ============== //
 
@@ -225,76 +179,29 @@ public class BackendService {
         if (emittersList != null) {
             emittersList.remove(emitter);
             if (emittersList.isEmpty()) {
-                emitters.remove(key); // Remove the key if no emitters are left
+                emitters.remove(key); 
             }
         }
     }
-    
 
     public void broadCastUpdate(Object key, Object update) {
-    List<SseEmitter> deadEmitters = new ArrayList<>();
-    List<SseEmitter> relevantEmitters = emitters.getOrDefault(key, new ArrayList<>());
+        List<SseEmitter> deadEmitters = new ArrayList<>();
+        List<SseEmitter> relevantEmitters = emitters.getOrDefault(key, new ArrayList<>());
     
-    for (SseEmitter emitter : relevantEmitters) {
-        try {
-            emitter.send(SseEmitter.event().data(update));
-        } catch (Exception e) {
-            deadEmitters.add(emitter);
-        }
-    }
-    
-    // Remove dead emitters
-    relevantEmitters.removeAll(deadEmitters);
-    if (relevantEmitters.isEmpty()) {
-        emitters.remove(key); // Clean up if no live emitters are left for this key
-    } else {
-        emitters.put(key, relevantEmitters); // Update the list of emitters for this key
-    }
-}
-
-
-    // ========== DEV METHODS ================== //
-   
-    /**
-     * Starts a localtime tournament for dev purposes
-     */
-    public Tournament startALocalTimeTournament() {
-        return tournamentScheduler.startLocalTimeTournament();
-    }
-    
-    
-    // =========== HELPER MEHTODS ============== //
-
-    private void updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore) { // Could refactor this away to a helper class
-        String redisKey = "leaderboard:group:" + groupId;
-        Boolean exists = realtimeleaderboard.hasKey(redisKey);
-        if (exists != null && exists) {
-            Set<Object> userScores = realtimeleaderboard.opsForZSet().rangeByScore(redisKey, 0, Double.MAX_VALUE);
-            if(userScores != null){
-                userScores.stream()
-                          .filter(score -> score.toString().startsWith(userId + ":"))
-                          .findFirst()
-                          .ifPresent(score -> realtimeleaderboard.opsForZSet().remove(redisKey, score));
+        for (SseEmitter emitter : relevantEmitters) {
+            try {
+                emitter.send(SseEmitter.event().data(update));
+            } catch (Exception e) {
+                deadEmitters.add(emitter);
             }
-            String valueToStore = userId + ":" + newScore;
-            realtimeleaderboard.opsForZSet().add(redisKey, valueToStore, newScore);
-            broadCastGroupLeaderBoardUpdate(groupId);
+        }
+        relevantEmitters.removeAll(deadEmitters);
+        if (relevantEmitters.isEmpty()) {
+            emitters.remove(key); 
         } else {
-            System.out.println("Leaderboard for group " + groupId + " does not exist in Redis.");
+            emitters.put(key, relevantEmitters); 
         }
     }
-    /**
-     * Assumes level change is just plus one per call
-     * @param country
-     */
-    public void updateRedisCountryLeaderBoard(User.Country country) {
-        String redisKey = "leaderboard:country";
-        String countryMember = country.name();
-        Integer scoreDelta = 1; 
-        realtimeleaderboard.opsForZSet().incrementScore(redisKey, countryMember, scoreDelta);
-        broadCastCountryLeaderboardUpdate();
-    }
-
     
     public void broadCastGroupLeaderBoardUpdate(Long groupId) {
         System.out.println("BROADCASTING UPDATE TO GROUP LEADERBOARD: " + groupId );
@@ -321,4 +228,15 @@ public class BackendService {
     public User getUser(Long userId) {
         return userService.getUser(userId);
     }
+
+
+    // ========== DEV METHODS ================== //
+   
+    /**
+     * Starts a localtime tournament for dev purposes
+     */
+    public Tournament startALocalTimeTournament() {
+        return tournamentScheduler.startLocalTimeTournament();
+    }
+    
 }

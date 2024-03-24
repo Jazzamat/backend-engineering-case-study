@@ -7,53 +7,89 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 
+/**
+ * Represents a tournament entry for a user in a tournament group.
+ * 
+ * @author E. Omer Gul
+ */
 @Entity
 public class TournamentEntry {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
 
-    @ManyToOne
-    private TournamentGroup tournamentGroup;
+	@ManyToOne
+	private TournamentGroup tournamentGroup;
 
-    @ManyToOne
-    private User user;
+	@ManyToOne
+	private User user;
 
-    private int score = 0;
-    private boolean rewardClaimed = false;
+	private int score = 0;
+	private boolean rewardClaimed = false;
 
+	
 	public TournamentEntry() {
 	}
 
+	/**
+	 * Constructor to create a tournament entry with the specified tournament group and user.
+	 * 
+	 * @param tournamentGroup The tournament group.
+	 * @param user The user.
+	 */
 	public TournamentEntry(TournamentGroup tournamentGroup, User user) {
 		this.tournamentGroup = tournamentGroup;
 		this.user = user;
 	}
 
+	/**
+	 * Increments the score of the tournament entry by 1.
+	 * 
+	 * @return The updated score.
+	 */
 	public int incrementScore() {
 		this.score++;
 		return this.score;
 	}
 
+	/**
+	 * Checks if the tournament group has begun.
+	 * 
+	 * @return true if the tournament group has begun, false otherwise.
+	 */
 	public boolean groupHasBegun() {
 		return this.tournamentGroup.hasBegun();
 	}
 
-    public boolean containsCountry(User.Country country) {
-        return user.getCountry() == country;
-    }
+	/**
+	 * Checks if the user's country matches the specified country.
+	 * 
+	 * @param country The country to check against.
+	 * @return true if the user's country matches the specified country, false otherwise.
+	 */
+	public boolean containsCountry(User.Country country) {
+		return user.getCountry() == country;
+	}
+
 
 	public Long getId() {
 		return id;
 	}
+
 	public void setId(Long id) {
 		this.id = id;
 	}
+
 	public TournamentGroup getTournamentGroup() {
 		return tournamentGroup;
 	}
 
+	/**
+	 * Gets the ID of the tournament group of the tournament entry.
+	 * 
+	 * @return The ID of the tournament group.
+	 */
 	public Long getGroupId() {
 		return tournamentGroup.getId();
 	}
@@ -61,6 +97,7 @@ public class TournamentEntry {
 	public void setTournamentGroup(TournamentGroup tournamentGroup) {
 		this.tournamentGroup = tournamentGroup;
 	}
+
 	public User getUser() {
 		return user;
 	}
@@ -72,17 +109,30 @@ public class TournamentEntry {
 	public void setUser(User user) {
 		this.user = user;
 	}
+
 	public int getScore() {
 		return score;
 	}
+
 	public void setScore(int score) {
 		this.score = score;
 	}
+
+	/**
+	 * Checks if the reward has been claimed for the tournament entry.
+	 * 
+	 * @return true if the reward has been claimed, false otherwise.
+	 */
 	public boolean isRewardClaimed() {
 		return rewardClaimed;
 	}
+
+	/**
+	 * Sets the reward claimed status for the tournament entry.
+	 * 
+	 * @param rewardClaimed The reward claimed status to set.
+	 */
 	public void setRewardClaimed(boolean rewardClaimed) {
-		
 		this.rewardClaimed = rewardClaimed;
 	}
 

@@ -7,8 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import jakarta.transaction.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -18,6 +19,7 @@ public class BackendControllerTest {
     private MockMvc mockMvc;
 
     @Test
+    @Transactional
     public void testCreateUser() throws Exception {
         mockMvc.perform(post("/backend/users")
                 .param("username", "testUser"))
@@ -29,15 +31,14 @@ public class BackendControllerTest {
     }
 
     @Test
+    @Transactional
     public void testUpdateUserLevelAndCoins() throws Exception {
-        // Create a user to update
         String username = "levelUpUser";
         String responseBody = mockMvc.perform(post("/backend/users")
                 .param("username", username))
                 .andReturn().getResponse().getContentAsString();
         Long userId = Long.parseLong(responseBody.split(",")[0].split(":")[1].trim());
 
-        // Update user's level and coins
         mockMvc.perform(put("/backend/users/updateLevel")
                 .param("userId", String.valueOf(userId)))
                 .andExpect(status().isOk())
@@ -46,8 +47,8 @@ public class BackendControllerTest {
     }
 
     @Test
+    @Transactional
     public void testEnterTournamentImmediately() throws Exception {
-        // Assuming creating a user and entering a tournament would be a valid sequence
         String username = "tournamentUser";
         String responseBody = mockMvc.perform(post("/backend/users")
                 .param("username", username))
@@ -57,26 +58,37 @@ public class BackendControllerTest {
         mockMvc.perform(post("/backend/tournaments/enter")
                 .param("userId", String.valueOf(userId)))
                 .andExpect(status().isBadRequest());
-                // Validate specific fields if required
+    }
+
+
+    @Test 
+    @Transactional
+    public void TestCountryLeaderboardOne() {
+     
     }
 
     @Test
+    @Transactional
     public void testClaimReward() throws Exception {
-      
+         // TODO 
     }
 
     @Test
+    @Transactional
     public void testGetGroupRank() throws Exception {
-      
+         // TODO 
     }
 
     @Test
+    @Transactional
     public void testGetGroupLeaderboard() throws Exception {
+         // TODO 
       
     }
 
     @Test
+    @Transactional
     public void testGetCountryLeaderboard() throws Exception {
-      
+         // TODO 
     }
 }

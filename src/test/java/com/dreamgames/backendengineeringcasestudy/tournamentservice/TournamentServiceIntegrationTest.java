@@ -16,6 +16,7 @@ public class TournamentServiceIntegrationTest {
     private TournamentService tournamentService;
 
     @Test
+    @Transactional
     public void testCreateUser() {
        tournamentService.integrationTestMethod();
     }
