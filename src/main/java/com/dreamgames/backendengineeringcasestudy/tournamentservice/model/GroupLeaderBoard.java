@@ -8,8 +8,8 @@ import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 
 public class GroupLeaderBoard { // TODO make sure this aint just a data class
    
-    public List<Pair<User,Integer>> leaderboard;
-    public Long groupId;
+    private List<Pair<User,Integer>> leaderboard;
+    private Long groupId;
 
     public GroupLeaderBoard(List<Pair<User, Integer>> leaderboard, Long groupId) {
         this.leaderboard = leaderboard;

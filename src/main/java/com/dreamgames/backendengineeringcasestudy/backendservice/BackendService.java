@@ -4,11 +4,13 @@ package com.dreamgames.backendengineeringcasestudy.backendservice;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -57,7 +59,8 @@ public class BackendService {
      * @param username
      * @return
      */
-    public User createUser(String username) {
+    @Async
+    public CompletableFuture<User> createUser(String username) {
         return userService.createUser(username);
     }
     

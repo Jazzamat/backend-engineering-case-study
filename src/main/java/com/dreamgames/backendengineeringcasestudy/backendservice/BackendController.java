@@ -2,6 +2,7 @@ package com.dreamgames.backendengineeringcasestudy.backendservice;
 
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +25,8 @@ public class BackendController {
     }
     
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(@RequestParam String username) {
-        try {
-            User user = backendService.createUser(username);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public CompletableFuture<ResponseEntity<?>> createUser(@RequestParam String username) throws Exception {
+        return backendService.createUser(username).thenApply(ResponseEntity::ok);
     }
     
     @PutMapping("/users/updateLevel")

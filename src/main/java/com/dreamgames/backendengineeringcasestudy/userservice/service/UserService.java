@@ -1,6 +1,9 @@
 package com.dreamgames.backendengineeringcasestudy.userservice.service;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;
@@ -25,11 +28,12 @@ public class UserService {
      * @param username The username of the user.
      * @return The created user.
      */
-    public User createUser(String username) {  
+    @Async
+    public CompletableFuture<User> createUser(String username) {  
         User user = new User();
         user.setUsername(username);
         user.setCountry(User.Country.getRandomCountry());
-        return userRepository.save(user);
+        return CompletableFuture.completedFuture(userRepository.save(user));
     }
 
     /**
