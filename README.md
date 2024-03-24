@@ -10,6 +10,15 @@ backend services"_
 
 To acheive this i've...
 
+### Usage
+
+Spin up all the docker containers using docker compose. The app waits for the mysql database to be healthy so its normal if it waits half a mintute or so.
+For configuration make sure that the application.properties has the correct urls set for the containers. Navigate to application.properties for details
+
+#### Postman 
+If you are examining this submission i will have sent you the postman collection, along with all the requests, to the specified email. Please feel free to contact me if you have any issues with this.
+
+
 
 
 ### Architecture
