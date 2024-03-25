@@ -1,8 +1,13 @@
 package com.dreamgames.backendengineeringcasestudy.userservice.model;
 
 import java.util.Random;
+
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Enumerated;
@@ -16,10 +21,12 @@ import jakarta.persistence.EnumType;
  * 
  * The User class also defines an inner enum class called Country, which represents the country of the user.
  * 
+ * 
  * This class is annotated with the @Entity annotation, indicating that it is a persistent entity in the database.
  * 
  * @author E. Omer Gul 
  */
+@OptimisticLocking(type=OptimisticLockType.ALL)
 @Entity
 public class User {
 	
@@ -33,6 +40,8 @@ public class User {
     private static final int FIRST_PLACE_WIN = 10000;
     private static final int SECOND_PLACE_WIN = 5000;
 
+	@Version
+	private Long version;
 
 	@Enumerated(EnumType.STRING)
 	private Country country;
@@ -161,7 +170,7 @@ public class User {
 		if (coins != other.coins)
 			return false;
 		if (level != other.level)
-			return false;
+		return false;
 		if (country != other.country)
 			return false;
 		return true;

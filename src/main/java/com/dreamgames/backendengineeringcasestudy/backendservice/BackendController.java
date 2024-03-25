@@ -40,12 +40,12 @@ public class BackendController {
     }
     
     @PostMapping("/tournaments/enter")
-    public ResponseEntity<?> enterTournament(@RequestParam Long userId) {
+    public CompletableFuture<ResponseEntity<?>> enterTournament(@RequestParam Long userId) {
         try {
             GroupLeaderBoard groupLeaderBoard = backendService.enterTournament(userId);
-            return ResponseEntity.ok(groupLeaderBoard);
+            return CompletableFuture.completedFuture(ResponseEntity.ok(groupLeaderBoard));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return CompletableFuture.completedFuture(ResponseEntity.badRequest().body(e.getMessage()));
         }
     }
     

@@ -5,7 +5,9 @@ import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
+import org.springframework.test.util.ExceptionCollector;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
@@ -25,6 +27,7 @@ import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 /**
  * This class represents the backend service for the DreamGames application.
@@ -35,6 +38,7 @@ import jakarta.persistence.EntityNotFoundException;
  * 
  */
 @Service
+@EnableAsync
 public class BackendService {
     
     private UserService userService;
@@ -61,7 +65,7 @@ public class BackendService {
      */
     @Async
     public CompletableFuture<User> createUser(String username) {
-        return userService.createUser(username);
+        return CompletableFuture.supplyAsync(() -> userService.createUser(username));
     }
     
     /**
@@ -70,18 +74,21 @@ public class BackendService {
      * @param cointsToAdd
      * @return
      */
-    public User updateUserLevelAndCoins(Long userId, int cointsToAdd) {
+    public User updateUserLevelAndCoins(Long userId, int cointsToAdd) throws Exception {
         try {
-            Pair<Integer,Long> scoreAndgroupId = tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId());
+            Pair<Integer,Long> scoreAndgroupId = tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId().get()).get();
             System.out.println("UPDATING USER SCORE TO :" + scoreAndgroupId.getValue0()); // TODO delete debug statemetn
             updateRedisGroupLeaderboard(scoreAndgroupId.getValue1(),userId, scoreAndgroupId.getValue0());
             updateRedisCountryLeaderBoard(userService.retreiveUsersCountry(userId));
-        } catch (TournamentGroupHasNotBegunException e) { // TOOD: nottin?
+        } catch (TournamentGroupHasNotBegunException e) { 
+           System.err.println("Tournament group has not begun");
             // do nothin 
         } catch (NoSuchTournamentException e) {
+            System.err.println("No such tournament");
             // do nothin 
         } catch (EntityNotFoundException e) {
             // user has no entry to update
+            System.err.println("Entity not found");
         } 
         
         return userService.updateUserLevelAndCoins(userId, cointsToAdd);
@@ -96,6 +103,7 @@ public class BackendService {
     public GroupLeaderBoard enterTournament(Long userId) throws Exception { // TODO: Test that users can't enter a new tournament without claiming previous rewards
         User user = userService.getUser(userId);
         GroupLeaderBoard groupLeaderBoard = tournamentService.enterTournament(user);
+        userService.saveUser(user);
         Integer initialScore = 0;
         Long groupId = groupLeaderBoard.getGroupId();
         updateRedisGroupLeaderboard(groupId, userId, initialScore);
@@ -107,11 +115,11 @@ public class BackendService {
      * @param userId
      * @return
      */
-    public User claimReward(Long userId, Long tournamentId) throws TournamentHasNotEndedException, TournamentGroupHasNotBegunException {
-        if (!tournamentService.hasEnded(tournamentId)) {
+    public User claimReward(Long userId, Long tournamentId) throws TournamentHasNotEndedException, TournamentGroupHasNotBegunException, Exception {
+        if (!tournamentService.hasEnded(tournamentId).get()) {
             throw new TournamentHasNotEndedException("Tournament is still going");
         }
-        int rank = tournamentService.getGroupRank(userId, tournamentId);
+        int rank = tournamentService.getGroupRank(userId, tournamentId).get();
         tournamentService.claimReward(userId);
         return userService.claimReward(userId,rank);
     }
@@ -122,8 +130,8 @@ public class BackendService {
      * @param tournamentId
      * @return
      */ 
-    public int getGroupRank(Long userId, Long tournamentId) throws EntityNotFoundException, TournamentGroupHasNotBegunException {
-        return tournamentService.getGroupRank(userId, tournamentId);
+    public int getGroupRank(Long userId, Long tournamentId) throws EntityNotFoundException, TournamentGroupHasNotBegunException, Exception {
+        return tournamentService.getGroupRank(userId, tournamentId).get();
     }
     
     /**
@@ -133,7 +141,7 @@ public class BackendService {
      * @param groupId
      * @return
      */
-    public GroupLeaderBoard getGroupLeaderboard(Long groupId) { // TODO test some more now that we have score in there too
+    public GroupLeaderBoard getGroupLeaderboard(Long groupId) throws Exception { // TODO test some more now that we have score in there too
         return Redis.redisGetGroupLeaderboard(groupId, realtimeleaderboard, tournamentService, userService);
     }
     
@@ -143,14 +151,14 @@ public class BackendService {
      * @param tournamentId
      * @return
      */
-    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException { // TODO test some more now that you have changed it arround 
+    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException, Exception { // TODO test some more now that you have changed it arround 
         return Redis.redisGetCountryLeaderboard(realtimeleaderboard, tournamentService, tournamentId);
     }
 
 
     // =========== REDIS HELPER MEHTODS ============== //
 
-    private void updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore) { // Could refactor this away to a helper class
+    private void updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore) throws Exception { // Could refactor this away to a helper class
         if(Redis.updateRedisGroupLeaderboard(groupId, userId, newScore, realtimeleaderboard)) {
             broadCastGroupLeaderBoardUpdate(groupId);
         }
@@ -160,6 +168,7 @@ public class BackendService {
      * Assumes level change is just plus one per call
      * @param country
      */
+
     public void updateRedisCountryLeaderBoard(User.Country country) {
         if (Redis.updateRedisCountryLeaderBoard(country, realtimeleaderboard)) {
             broadCastCountryLeaderboardUpdate();
@@ -206,7 +215,7 @@ public class BackendService {
         }
     }
     
-    public void broadCastGroupLeaderBoardUpdate(Long groupId) {
+    public void broadCastGroupLeaderBoardUpdate(Long groupId) throws Exception {
         System.out.println("BROADCASTING UPDATE TO GROUP LEADERBOARD: " + groupId );
         GroupLeaderBoard updatedLeaderBoard = getGroupLeaderboard(groupId);
         broadCastUpdate(groupId,updatedLeaderBoard);
@@ -215,23 +224,22 @@ public class BackendService {
     public void broadCastCountryLeaderboardUpdate() {
         System.out.println("BROADCASTING UPDATE TO COUNTRY LEADERBOARD");
         try {
-            broadCastUpdate("country",getCountryLeaderboard(tournamentService.getCurrentTournamentId()));
+            broadCastUpdate("country",getCountryLeaderboard(tournamentService.getCurrentTournamentId().get()));
         } catch (Exception e) {
             System.out.println("couldn't broadcast: " + e);
         }
     }
 
-    public Tournament getCurrentTournament() throws NoSuchTournamentException {
-        return tournamentService.getCurrentTournament();
+    public Tournament getCurrentTournament() throws NoSuchTournamentException, Exception {
+        return tournamentService.getCurrentTournament().get();
     }
 
     public void integrationTestMethod() {
     }
     
-    public User getUser(Long userId) {
+    public User getUser(Long userId) throws Exception {
         return userService.getUser(userId);
     }
-
 
     // ========== DEV METHODS ================== //
    

@@ -1,4 +1,5 @@
-package com.dreamgames.backendengineeringcasestudy.backendservice;
+package com.dreamgames.backendengineeringcasestudy.backendservice.config;
+
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

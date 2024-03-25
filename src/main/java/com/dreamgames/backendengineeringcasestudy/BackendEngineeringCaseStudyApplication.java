@@ -21,7 +21,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableCaching
 @EnableAsync
 public class BackendEngineeringCaseStudyApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(BackendEngineeringCaseStudyApplication.class, args);
 		System.out.println("**********************************************************************");

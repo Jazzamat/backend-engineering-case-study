@@ -4,6 +4,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,6 +31,9 @@ public class Tournament {
     
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     private Set<TournamentGroup> groups = new HashSet<>();
+
+    @Version
+    private int version;
     
      /**
      * Constructs an empty tournament.

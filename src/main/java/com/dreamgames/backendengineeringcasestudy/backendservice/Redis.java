@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.List;
 
+import org.hibernate.sql.exec.ExecutionException;
 import org.javatuples.Pair;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -36,39 +37,40 @@ public class Redis {
      * @param userService The service for retrieving user-related data.
      * @return The group leaderboard.
      */
-    public static GroupLeaderBoard redisGetGroupLeaderboard(Long groupId, RedisTemplate<String,Object> realtimeleaderboard, TournamentService tournamentService , UserService userService) {
-        // System.out.println("GETTING GROUP LEADER BOARD");
+    public static GroupLeaderBoard redisGetGroupLeaderboard(Long groupId, RedisTemplate<String,Object> realtimeleaderboard, TournamentService tournamentService , UserService userService) throws InterruptedException, ExecutionException, Exception {
         String redisKey = "leaderboard:group:" + groupId;
         Boolean exists = realtimeleaderboard.hasKey(redisKey);
         if (exists == null || !exists) {
-            // System.out.println("FIRST CALL SO NO REDIS");
-            GroupLeaderBoard groupLeaderBoard = tournamentService.getGroupLeaderboard(groupId); // this call queries the database
+            GroupLeaderBoard groupLeaderBoard = tournamentService.getGroupLeaderboard(groupId).get(); // this call queries the database
             groupLeaderBoard.getLeaderboard().forEach(pair -> {
                 realtimeleaderboard.opsForZSet().add(redisKey, pair.getValue0().getId() + ":" + pair.getValue1(), pair.getValue1());
             });
             realtimeleaderboard.expire(redisKey,Duration.ofHours(1));
             return groupLeaderBoard;
         } else {
-            // System.out.println("REDIS ALREADY EXISTS SO PULLING FROM CACHE");
             Set<Object> leaderboardData = realtimeleaderboard.opsForZSet().reverseRange(redisKey, 0, -1);
             List<Pair<User,Integer>> leaderboard = new ArrayList<>();
             leaderboardData.forEach(item -> {
-                if (item instanceof String) {
-                    String[] parts = ((String) item).split(":");
-                    if (parts.length == 2) {
-                        try {
-                            Long userId = Long.parseLong(parts[0]);
-                            Integer score = Integer.parseInt(parts[1]);
-                            User user = userService.getUser(userId);
-                            if (user != null) {
-                                leaderboard.add(Pair.with(user, score));
-                            } else {
-                                System.out.println("User not found for ID: " + userId);
+                try {
+                    if (item instanceof String) {
+                        String[] parts = ((String) item).split(":");
+                        if (parts.length == 2) {
+                            try {
+                                Long userId = Long.parseLong(parts[0]);
+                                Integer score = Integer.parseInt(parts[1]);
+                                User user = userService.getUser(userId);
+                                if (user != null) {
+                                    leaderboard.add(Pair.with(user, score));
+                                } else {
+                                    System.out.println("User not found for ID: " + userId);
+                                }
+                            } catch (NumberFormatException ex) {
+                                System.out.println("Error parsing userID or score from: " + item);
                             }
-                        } catch (NumberFormatException ex) {
-                            System.out.println("Error parsing userID or score from: " + item);
                         }
                     }
+                } catch (Exception e) {
+                    System.err.print(e.getMessage());
                 }
             });
             return new GroupLeaderBoard(leaderboard, groupId);
@@ -85,12 +87,12 @@ public class Redis {
      * @return The country leaderboard.
      * @throws NoSuchTournamentException If the tournament does not exist.
      */
-    public static List<Pair<User.Country,Integer>> redisGetCountryLeaderboard(RedisTemplate<String,Object> realtimeleaderboard, TournamentService tournamentService, Long tournamentId) throws NoSuchTournamentException {
+    public static List<Pair<User.Country,Integer>> redisGetCountryLeaderboard(RedisTemplate<String,Object> realtimeleaderboard, TournamentService tournamentService, Long tournamentId) throws NoSuchTournamentException , Exception {
         String redisKey = "leaderboard:country";
          Boolean exists = realtimeleaderboard.hasKey(redisKey);
          if (exists == null || !exists) {
              System.out.println("First call so no Redis, generating country leaderboard...");
-             List<Pair<User.Country, Integer>> initialLeaderboard = tournamentService.getCountryLeaderboard(tournamentId);
+             List<Pair<User.Country, Integer>> initialLeaderboard = tournamentService.getCountryLeaderboard(tournamentId).get();
              initialLeaderboard.forEach(pair -> {
                  String country = pair.getValue0().name();
                  Integer score = pair.getValue1();

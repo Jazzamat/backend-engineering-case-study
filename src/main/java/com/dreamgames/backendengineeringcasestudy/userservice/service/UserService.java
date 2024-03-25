@@ -2,9 +2,14 @@ package com.dreamgames.backendengineeringcasestudy.userservice.service;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.assertj.core.api.CompletableFutureAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.expression.ExpressionException;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
+import org.springframework.test.util.ExceptionCollector;
+
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,12 +33,11 @@ public class UserService {
      * @param username The username of the user.
      * @return The created user.
      */
-    @Async
-    public CompletableFuture<User> createUser(String username) {  
+    public User createUser(String username) {  
         User user = new User();
         user.setUsername(username);
         user.setCountry(User.Country.getRandomCountry());
-        return CompletableFuture.completedFuture(userRepository.save(user));
+        return userRepository.save(user);
     }
 
     /**
@@ -47,13 +51,17 @@ public class UserService {
         return userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException());
     }
 
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
+
     /**
      * Retrieves the country of a user.
      * 
      * @param userId The ID of the user.
      * @return The country of the user.
      */
-    public User.Country retreiveUsersCountry(Long userId) {
+    public User.Country retreiveUsersCountry(Long userId) throws Exception {
         User user = getUser(userId);
         return user.getCountry();
     }
@@ -66,11 +74,11 @@ public class UserService {
      * @return The updated user.
      * @throws EntityNotFoundException If the user with the given ID does not exist.
      */
-    public User updateUserLevelAndCoins(Long userId, int coinsToAdd) throws EntityNotFoundException { 
+    public User updateUserLevelAndCoins(Long userId, int coinsToAdd) throws EntityNotFoundException, Exception { 
         User user = getUser(userId); 
         user.updateLevelAndCoins(coinsToAdd);
         return userRepository.save(user);
-    }
+    } 
 
     /**
      * Claims a reward for a user.
@@ -79,9 +87,9 @@ public class UserService {
      * @param rank The rank of the reward to claim.
      * @return The updated user.
      */
-    public User claimReward(Long userId, int rank) {
+    public User claimReward(Long userId, int rank) throws Exception {
         User user = getUser(userId);
         user.claimReward(rank);
         return userRepository.save(user);
-    }
+    } 
 }
