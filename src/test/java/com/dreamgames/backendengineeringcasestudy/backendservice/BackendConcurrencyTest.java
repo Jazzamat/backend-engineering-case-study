@@ -30,7 +30,7 @@ public class BackendConcurrencyTest {
 
     @Test
     public void testConcurrentUserCreation() throws InterruptedException {
-        final int numberOfUsers = 500;
+        final int numberOfUsers = 1000;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
         AtomicInteger successCounter = new AtomicInteger(0);
         long startTime = System.currentTimeMillis();
@@ -58,7 +58,7 @@ public class BackendConcurrencyTest {
 
     @Test
     public void testConcurrentTournamentEntry() throws InterruptedException {
-        final int numberOfUsers = 10;
+        final int numberOfUsers = 1000;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
         AtomicInteger successCounter = new AtomicInteger(0);
         long startTime = System.currentTimeMillis();
@@ -68,7 +68,7 @@ public class BackendConcurrencyTest {
                 assertDoesNotThrow(() -> {
                     User user = backendService.createUser("testUser" + Thread.currentThread().getId()).get();
                     assertThrows(LevelNotHighEnoughException.class, () -> {
-                        backendService.enterTournament(user.getId());
+                        backendService.enterTournamentAsyncWrapper(user.getId());
                     });
                 });
                 successCounter.incrementAndGet();

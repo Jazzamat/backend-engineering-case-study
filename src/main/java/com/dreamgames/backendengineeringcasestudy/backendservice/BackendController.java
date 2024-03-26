@@ -42,7 +42,7 @@ public class BackendController {
     @PostMapping("/tournaments/enter")
     public CompletableFuture<ResponseEntity<?>> enterTournament(@RequestParam Long userId) {
         try {
-            GroupLeaderBoard groupLeaderBoard = backendService.enterTournament(userId);
+            GroupLeaderBoard groupLeaderBoard = backendService.enterTournamentAsyncWrapper(userId).get();
             return CompletableFuture.completedFuture(ResponseEntity.ok(groupLeaderBoard));
         } catch (Exception e) {
             return CompletableFuture.completedFuture(ResponseEntity.badRequest().body(e.getMessage()));
@@ -52,7 +52,7 @@ public class BackendController {
     @PostMapping("/tournaments/claimReward")
     public ResponseEntity<?> claimReward(@RequestParam("userId") Long userId, @RequestParam("tournamentId") Long tournamentId) {
         try {
-            User updatedUser = backendService.claimReward(userId, tournamentId);
+            User updatedUser = backendService.claimRewardAsyncWrapper(userId, tournamentId).get();
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -62,7 +62,7 @@ public class BackendController {
     @GetMapping("/tournaments/rank")
     public ResponseEntity<?> getGroupRank(@RequestParam("userId") Long userId, @RequestParam("tournamentId") Long tournamentId) {
         try {
-            int rank = backendService.getGroupRank(userId, tournamentId);
+            int rank = backendService.getGroupRankAsyncWrapper(userId, tournamentId).get();
             return ResponseEntity.ok().body(rank);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -72,7 +72,7 @@ public class BackendController {
     @GetMapping("/tournaments/leaderboard/group")
     public ResponseEntity<?> getGroupLeaderboard(@RequestParam("groupId") Long groupId) {
         try {
-            GroupLeaderBoard groupLeaderBoard = backendService.getGroupLeaderboard(groupId);
+            GroupLeaderBoard groupLeaderBoard = backendService.getGroupLeaderboardAsyncWrapper(groupId).get();
             return ResponseEntity.ok(groupLeaderBoard);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -82,7 +82,7 @@ public class BackendController {
     @GetMapping("/tournaments/leaderboard/country")
     public ResponseEntity<?> getCountryLeaderboard(@RequestParam("tournamentId") Long tournamentId) {
         try {
-            var countryLeaderboard = backendService.getCountryLeaderboard(tournamentId);
+            var countryLeaderboard = backendService.getCountryLeaderboardAsyncWrapper(tournamentId).get();
             return ResponseEntity.ok(countryLeaderboard);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

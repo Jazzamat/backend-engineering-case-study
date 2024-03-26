@@ -68,11 +68,6 @@ public class BackendService {
         return CompletableFuture.supplyAsync(() -> userService.createUser(username));
     }
 
-
-    @Async
-    public CompletableFuture<User> updateUserLevelAndCoinsAsyncWrapper(Long userId, int cointsToAdd) {
-        return CompletableFuture.supplyAsync(() -> updateUserLevelAndCoins(userId, cointsToAdd));
-    }
     /**
      * Creates a new user, returning a user object that contains, its id, level, coins and country
      * @param userId
@@ -98,9 +93,9 @@ public class BackendService {
                 System.err.println("##### EXCEPTION: " + e.getMessage());
             }
             return userService.updateUserLevelAndCoins(userId, cointsToAdd);
-
     }
-    
+
+
     /**
      * Allows a user to join the current tournament and returns the current group leaderboard. For realtime updates of the leaderboard it calls the redis database
      * @param userId
@@ -116,7 +111,8 @@ public class BackendService {
         updateRedisGroupLeaderboard(groupId, userId, initialScore);
         return groupLeaderBoard;
     } 
-    
+
+
     /**
      *  Allows users to claim tournament rewards and returns updated progress data.
      * @param userId
@@ -131,6 +127,7 @@ public class BackendService {
         return userService.claimReward(userId,rank);
     }
 
+
     /**
      * Retrieves the player's rank for any tournament 
      * @param userId
@@ -140,7 +137,8 @@ public class BackendService {
     public int getGroupRank(Long userId, Long tournamentId) throws EntityNotFoundException, TournamentGroupHasNotBegunException, Exception {
         return tournamentService.getGroupRank(userId, tournamentId).get();
     }
-    
+
+
     /**
      * Gets the leaderboard data of a tournament group. The data contains as user object (id, username, country) as well as the users tournament score
      * If it is the first call the mysql database is queried and a copy is created for the redis database
@@ -150,8 +148,9 @@ public class BackendService {
      */
     public GroupLeaderBoard getGroupLeaderboard(Long groupId) throws Exception { // TODO test some more now that we have score in there too
         return Redis.redisGetGroupLeaderboard(groupId, realtimeleaderboard, tournamentService, userService);
-    }
-    
+    } 
+
+
     /**
      * Gets the leaderboard data of the countries for a tournament. The data includes country name and its total tournament score
      * @param country
@@ -162,6 +161,74 @@ public class BackendService {
         return Redis.redisGetCountryLeaderboard(realtimeleaderboard, tournamentService, tournamentId);
     }
 
+
+    // ============== ASYNC WRAPPERS ================= //
+
+    @Async
+    public CompletableFuture<User> updateUserLevelAndCoinsAsyncWrapper(Long userId, int cointsToAdd) {
+        return CompletableFuture.supplyAsync(() -> updateUserLevelAndCoins(userId, cointsToAdd));
+    }
+
+    @Async
+    public CompletableFuture<GroupLeaderBoard> enterTournamentAsyncWrapper(Long userId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return enterTournament(userId);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
+    public CompletableFuture<User> claimRewardAsyncWrapper(Long userId, Long tournamentId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return claimReward(userId, tournamentId);
+            } catch (TournamentHasNotEndedException | TournamentGroupHasNotBegunException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            } catch (Exception e) {
+                throw new RuntimeException("An unexpected error occurred while claiming rewards", e);
+            }
+        });
+    }
+
+    @Async
+    public CompletableFuture<Integer> getGroupRankAsyncWrapper(Long userId, Long tournamentId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getGroupRank(userId, tournamentId);
+            } catch (EntityNotFoundException | TournamentGroupHasNotBegunException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            } catch (Exception e) {
+                throw new RuntimeException("Unexpected error while retrieving group rank", e);
+            }
+        });
+    }
+
+    @Async 
+    public CompletableFuture<GroupLeaderBoard> getGroupLeaderboardAsyncWrapper(Long groupId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getGroupLeaderboard(groupId);
+            } catch (Exception e) {
+                throw new RuntimeException("Unexpected error while retrieving group leaderboard", e);
+            }
+        });
+    }
+
+    @Async
+    public CompletableFuture<List<Pair<User.Country, Integer>>> getCountryLeaderboardAsyncWrapper(Long tournamentId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getCountryLeaderboard(tournamentId);
+            } catch (NoSuchTournamentException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            } catch (Exception e) {
+                throw new RuntimeException("Unexpected error while retrieving country leaderboard", e);
+            }
+        });
+    }
 
     // =========== REDIS HELPER MEHTODS ============== //
 
