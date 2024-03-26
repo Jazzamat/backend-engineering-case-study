@@ -16,6 +16,28 @@ For configuration make sure that the application.properties has the correct urls
 ## Postman 
 If you are examining this submission i will have sent you the postman collection, along with all the requests, to the specified email. Please feel free to contact me if you have any issues with this.
 
+# Assumptions/Notes
+
+* Every user needs to collect rewards regardless of whether they win. As a means of exiting the tournament;
+* Leaderboards need to be created with the get requests first, in order to be able to subscribe to them.
+* Expected leaderboard output:
+  ** Country
+
+![image](https://github.com/Jazzamat/backend-engineering-case-study/assets/18194935/e1614e84-2cb1-4bc3-8afc-e234978e2d9f)
+
+** Tournament Group:
+
+![image](https://github.com/Jazzamat/backend-engineering-case-study/assets/18194935/4f21988b-8d14-4d2f-9768-26ad6607d160)
+
+Where value1 is the score
+# Expected Ouputs
+
+* CreateUserRequest:
+  ![image](https://github.com/Jazzamat/backend-engineering-case-study/assets/18194935/c4cac363-0039-46d4-8a5e-c52afb862169)
+
+* UpdateLevelRequest:
+
+
 # Architecture
 ![image](https://github.com/Jazzamat/backend-engineering-case-study/blob/main/architecture.png)
 
