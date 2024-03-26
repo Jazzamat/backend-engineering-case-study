@@ -8,7 +8,6 @@ backend engineers, we provide a Rest API to maintain the users' progress. Our sy
 to be fast and secure to enhance user experience. We use Spring Boot with Java to write our
 backend services"_
 
-To acheive this i've...
 
 # Usage
 
