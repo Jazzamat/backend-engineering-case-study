@@ -10,23 +10,23 @@ backend services"_
 
 To acheive this i've...
 
-### Usage
+# Usage
 
 Spin up all the docker containers using docker compose. The app waits for the mysql database to be healthy so its normal if it waits half a mintute or so.
 For configuration make sure that the application.properties has the correct urls set for the containers. Navigate to application.properties for details
 
-#### Postman 
+## Postman 
 If you are examining this submission i will have sent you the postman collection, along with all the requests, to the specified email. Please feel free to contact me if you have any issues with this.
 
 
 
 
-### Architecture
+# Architecture
 ![image](https://github.com/Jazzamat/backend-engineering-case-study/blob/main/architecture.png)
 
 The propsed architecture uses a spring boot application to handle backend logic, a mysql database to store persistent data and redis for cacheing and updating realtime data that needs to be displayed to the user. 
 
-#### Springboot
+## Springboot
 The spring boot applications makes use of the Jakarta EE and JPA to perform the business logic and interface with the mysql database. Below is a UML class diagram of the domain entities as well as the controller and service classes. I have separated them here for simplcicity but refer to the pdf in the repository for a more complete URL diagram.
 
 ### UML - Controller and Service Classes (simplified)
@@ -37,19 +37,19 @@ The spring boot applications makes use of the Jakarta EE and JPA to perform the 
 
 ![image](https://github.com/Jazzamat/backend-engineering-case-study/assets/18194935/5e0da5be-365b-4b16-9b79-bab01b9a9228)
 
-#### Redis
+### Redis
 Due to the fact that running many database queries per thread is computationaly expensive redis is utilised to maintain leaderboards. Data such as users, tournament entries, tournament groups and tournaments are all stored in persistent storage. To generate the first leaderboard we still utilise a db query, however the leaderboard generated is cached in redis, and subsequent requests satisfied using this cache. The cache is maintained in a similar fashion to the database. Whenever a change occures that will modify the leaderboards, the redis copy is updated in memory, without having to consult the database, while the necessary data still persisted in the myslq database. Essentially we maintain a copy of derived data from the database and maintain it in parrallel with each request. With this comes the challenge of limited resources. Given memory is not as abundant as storage each redis leaderboard has a given lifetime that can be adjusted according to load, afterwhich point the memory will be freed. Alongside this concern we must also take into account the fact that race cases may occur where the redis leaderboard falls out of sync with mysql. This can be alleviated by INSERT SOLLUTION HERE, however due to time constrains was not implemented in this iteration.
 
-#### Myslq
+### Myslq
 All interactions pass through the JPA repositories as demonstrated in the uml. These serve as a good layer of abstraction and minimise the need to write queries for many tasks, although they were still necessary. By providing methods to the interfaces along with the @Query tag we are able to specify custom queries where needed. However beyond that we are able to simply use our domain classes with the appropriate tags to perform the approriate logic for each of our entitties. 
 
-### Considerations 
+## Considerations 
 
-#### Concurrency
+### Concurrency
 
 In order too utilise concurrent operation for the application, we make the appropriate pooling configurations in application.properties and in AsyncConfig.java. Wrappers in the BackendService class use the CompletableFuture classes in java to run tasks asyncronously. With the configuration at the time of writing, we are able to accomodate users in the order of thousands in a mater of mere hundreds of miliseconds. For threadsafe CRUD operations we utilise a technique called optimistic(or pesimistic) locking, which, in short, is a rollback mecahnism that utilises a version attribute in the database tables (using the @version tag) in the case of conflicing operations. In the current implementation the consequences of the rolebacks are forwarded to the client, ie if a conflict occurs the change is undone and the client must try again. In future iterations this could be handled in the application.  
 
-#### RealTime updates
+### RealTime updates
 
 In order to receive realtime updates the client may subscibe to a serverside event (see postman) which in short is an observer pattern for updates to the leaderboards. Subscribed clients will recive updates through emitters (as seen in BackendService.java) when ever a change in the leaderboard occurs.
 
