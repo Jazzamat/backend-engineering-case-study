@@ -54,7 +54,7 @@ Due to the fact that running many database queries per thread is computationaly 
 With this comes the challenge of limited resources. Given memory is not as abundant as storage each redis leaderboard has a given lifetime that can be adjusted according to load, afterwhich point the memory will be freed. Alongside this concern we must also take into account the fact that race cases may occur where the redis leaderboard falls out of sync with mysql. This can be alleviated by performing periodic synchronisation based on load and thus anticipated deviation, however due to time constrains this was not implemented in this iteration.
 
 ### Myslq
-All interactions pass through the JPA repositories as demonstrated in the uml. These serve as a good layer of abstraction and minimise the need to write queries for many tasks, although they were still necessary. By providing methods to the interfaces along with the @Query tag we are able to specify custom queries where needed. However beyond that we are able to simply use our domain classes with the appropriate tags to perform the approriate logic for each of our entitties. 
+All interactions pass through the JPA repositories as demonstrated in the uml. These serve as a good layer of abstraction and minimise the need to write queries for many tasks, although they were still necessary. By providing methods to the interfaces along with the @Query tag we are able to specify custom queries where needed. However beyond that we are able to simply use our domain classes with the appropriate tags to perform logic for each of our entitties, and use simple JPA methods such as save() or findById() where needed. 
 
 ## Considerations 
 
