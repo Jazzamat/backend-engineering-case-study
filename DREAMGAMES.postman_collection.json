@@ -1,0 +1,344 @@
+{
+	"info": {
+		"_postman_id": "420247d6-9780-4817-a787-48d1e2a2285b",
+		"name": "DREAMGAMES",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33662147"
+	},
+	"item": [
+		{
+			"name": "Realtime (SSE)",
+			"item": [
+				{
+					"name": "subscribeToCountryLeaderBoard",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "subscribeToGroupLeaderBoard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/backend/tournaments/subscribe/leaderboard/group/:groupId",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"backend",
+								"tournaments",
+								"subscribe",
+								"leaderboard",
+								"group",
+								":groupId"
+							],
+							"variable": [
+								{
+									"key": "groupId",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dev",
+			"item": [
+				{
+					"name": "DevNewLocalTournament",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "CreateUserRequest",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"pm.test(\"Response status code is 200\", function () {",
+							"  pm.expect(pm.response.code).to.equal(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response has the required fields - id, username, coins, level, and country\", function () {",
+							"  const responseData = pm.response.json();",
+							"  ",
+							"  pm.expect(responseData).to.be.an('object');",
+							"  pm.expect(responseData).to.have.property('id');",
+							"  pm.expect(responseData).to.have.property('username');",
+							"  pm.expect(responseData).to.have.property('coins');",
+							"  pm.expect(responseData).to.have.property('level');",
+							"  pm.expect(responseData).to.have.property('country');",
+							"});",
+							"",
+							"",
+							"pm.test(\"Username is a non-empty string\", function () {",
+							"  const responseData = pm.response.json();",
+							"  ",
+							"  pm.expect(responseData).to.be.an('object');",
+							"  pm.expect(responseData.username).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Username should not be empty\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"Coins and level are non-negative integers\", function () {",
+							"  const responseData = pm.response.json();",
+							"  ",
+							"  pm.expect(responseData).to.be.an('object');",
+							"  pm.expect(responseData.coins).to.be.a('number').and.to.be.at.least(0);",
+							"  pm.expect(responseData.level).to.be.a('number').and.to.be.at.least(0);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Country is a non-empty string\", function () {",
+							"  const responseData = pm.response.json();",
+							"  ",
+							"  pm.expect(responseData).to.be.an('object');",
+							"  pm.expect(responseData.country).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Country should not be empty\");",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/backend/users?username=test_user_bruh",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"backend",
+						"users"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "test_user_bruh"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateLevelRequest",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"pm.test(\"Response status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Content-Type header is application/json\", function () {",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"Validate the user object\", function () {",
+							"    const responseData = pm.response.json();",
+							"    ",
+							"    pm.expect(responseData).to.be.an('object');",
+							"    pm.expect(responseData.id).to.be.a('number');",
+							"    pm.expect(responseData.username).to.be.a('string');",
+							"    pm.expect(responseData.coins).to.be.a('number');",
+							"    pm.expect(responseData.level).to.be.a('number');",
+							"    pm.expect(responseData.country).to.be.a('string');",
+							"});",
+							"",
+							"",
+							"pm.test(\"Coins and level are non-negative integers\", function () {",
+							"  const responseData = pm.response.json();",
+							"  ",
+							"  pm.expect(responseData.coins).to.be.a('number').and.to.be.at.least(0);",
+							"  pm.expect(responseData.level).to.be.a('number').and.to.be.at.least(0);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Country is a non-empty string\", function () {",
+							"  const responseData = pm.response.json();",
+							"  ",
+							"  pm.expect(responseData).to.be.an('object');",
+							"  pm.expect(responseData.country).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Country should not be empty\");",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/backend/users/updateLevel?userId=1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"backend",
+						"users",
+						"updateLevel"
+					],
+					"query": [
+						{
+							"key": "userId",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EnterTournamentRequest",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/backend/tournaments/enter?userId=302",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"backend",
+						"tournaments",
+						"enter"
+					],
+					"query": [
+						{
+							"key": "userId",
+							"value": "302"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ClaimRewardRequest",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/backend/tournaments/:tournamentId/users/:userId/claimReward",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"backend",
+						"tournaments",
+						":tournamentId",
+						"users",
+						":userId",
+						"claimReward"
+					],
+					"variable": [
+						{
+							"key": "tournamentId",
+							"value": ""
+						},
+						{
+							"key": "userId",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetGroupRankRequest",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/backend/tournaments/rank",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"backend",
+						"tournaments",
+						"rank"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetGroupLeaderboardRequest",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/backend//tournaments/leaderboard/group?groupId=1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"backend",
+						"",
+						"tournaments",
+						"leaderboard",
+						"group"
+					],
+					"query": [
+						{
+							"key": "groupId",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCountryLeaderboardRequest",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
