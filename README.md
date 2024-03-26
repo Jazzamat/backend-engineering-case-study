@@ -42,7 +42,7 @@ The spring boot application makes use of Jakarta EE and JPA to perform the busin
 
 ### UML - Controller and Service Classes (simplified)
 
-![image](https://github.com/Jazzamat/backend-engineering-case-study/assets/18194935/bf552b20-ed81-426e-b6e0-f6a43eaa4dd2)
+![Blank diagram-3](https://github.com/Jazzamat/backend-engineering-case-study/assets/18194935/6613ff0f-875e-4c55-8471-7368af8677a0)
 
 ### UML - Domain Model Classes (simplified)
 
