@@ -53,5 +53,13 @@ In order too utilise concurrent operation for the application, we make the appro
 
 In order to receive realtime updates the client may subscibe to a serverside event (see postman) which in short is an observer pattern for updates to the leaderboards. Subscribed clients will recive updates through emitters (as seen in BackendService.java) when ever a change in the leaderboard occurs.
 
+# Thanks 
+If you are examinining this submission I thank you for your time, and for the opportunity of being tasked to write software. Its always a pleasure!
+Regards,
+Omer (Jazzamat).
+
+
+
+
 
 
