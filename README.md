@@ -47,11 +47,11 @@ All interactions pass through the JPA repositories as demonstrated in the uml. T
 
 #### Concurrency
 
-In order too utilise concurrent operation for the application, make the appropriate configurations in application.properties and in AsyncConfig.java.
+In order too utilise concurrent operation for the application, we make the appropriate pooling configurations in application.properties and in AsyncConfig.java. Wrappers in the BackendService class use the CompletableFuture classes in java to run tasks asyncronously. With the configuration at the time of writing, we are able to accomodate users in the order of thousands in a mater of mere hundreds of miliseconds. For threadsafe CRUD operations we utilise a technique called optimistic(or pesimistic) locking, which, in short, is a rollback mecahnism that utilises a version attribute in the database tables (using the @version tag) in the case of conflicing operations. In the current implementation the consequences of the rolebacks are forwarded to the client, ie if a conflict occurs the change is undone and the client must try again. In future iterations this could be handled in the application.  
 
 #### RealTime updates
 
+In order to receive realtime updates the client may subscibe to a serverside event (see postman) which in short is an observer pattern for updates to the leaderboards. Subscribed clients will recive updates through emitters (as seen in BackendService.java) when ever a change in the leaderboard occurs.
 
 
 
-# backend-engineering-case-study
