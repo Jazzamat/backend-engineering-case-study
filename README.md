@@ -14,7 +14,7 @@ Spin up all the docker containers using docker compose. The app waits for the my
 For configuration make sure that the application.properties has the correct urls set for the containers. Navigate to application.properties for details
 
 ## Postman 
-You can find the postman collection for the application in the root folder of this repo, in json format
+You can find the postman collection for the application in the root folder of this repo, in json format.
 
 # Assumptions/Notes
 
