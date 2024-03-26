@@ -14,10 +14,11 @@ Spin up all the docker containers using docker compose. The app waits for the my
 For configuration make sure that the application.properties has the correct urls set for the containers. Navigate to application.properties for details
 
 ## Postman 
-If you are examining this submission i will have sent you the postman collection, along with all the requests, to the specified email. Please feel free to contact me if you have any issues with this.
+You can find the postman collection for the application in the root folder of this repo, in json format
 
 # Assumptions/Notes
 
+* Note that you can create start a tournament for testing purposes through the postman request in the dev folder.
 * Every user needs to collect rewards regardless of whether they win. As a means of exiting the tournament;
 * Leaderboards need to be created with the get requests first, in order to be able to subscribe to them.
 * Expected leaderboard output:
@@ -65,8 +66,6 @@ In the current implementation the consequences of the rolebacks are forwarded to
 ### RealTime updates
 
 In order to receive realtime updates the client may subscibe to a serverside event (see postman) which in short is an observer pattern for updates to the leaderboards. Subscribed clients will recive updates through emitters (as seen in BackendService.java) whenever a change in the leaderboard occurs.
-
-### Testing
 
 
 
