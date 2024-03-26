@@ -65,7 +65,7 @@ In the current implementation the consequences of the rolebacks are forwarded to
 
 ### RealTime updates
 
-In order to receive realtime updates the client may subscibe to a serverside event (see postman) which in short is an observer pattern for updates to the leaderboards. Subscribed clients will recive updates through emitters (as seen in BackendService.java) whenever a change in the leaderboard occurs.
+In order to receive realtime updates the client may subscibe to a serverside event (see postman) which in short is an observer pattern for updates to the leaderboards. Subscribed clients will receive updates through emitters (as seen in BackendService.java) whenever a change in the leaderboard occurs.
 
 
 
