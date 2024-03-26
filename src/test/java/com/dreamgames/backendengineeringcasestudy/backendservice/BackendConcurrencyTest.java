@@ -29,9 +29,8 @@ public class BackendConcurrencyTest {
     private static final Logger logger = LoggerFactory.getLogger(BackendConcurrencyTest.class);
 
     @Test
-    @Transactional
     public void testConcurrentUserCreation() throws InterruptedException {
-        final int numberOfUsers = 50;
+        final int numberOfUsers = 500;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
         AtomicInteger successCounter = new AtomicInteger(0);
         long startTime = System.currentTimeMillis();
@@ -58,7 +57,6 @@ public class BackendConcurrencyTest {
     }
 
     @Test
-    @Transactional
     public void testConcurrentTournamentEntry() throws InterruptedException {
         final int numberOfUsers = 10;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);

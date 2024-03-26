@@ -74,7 +74,7 @@ public class UserService {
      * @return The updated user.
      * @throws EntityNotFoundException If the user with the given ID does not exist.
      */
-    public User updateUserLevelAndCoins(Long userId, int coinsToAdd) throws EntityNotFoundException, Exception { 
+    public User updateUserLevelAndCoins(Long userId, int coinsToAdd) throws EntityNotFoundException { 
         User user = getUser(userId); 
         user.updateLevelAndCoins(coinsToAdd);
         return userRepository.save(user);

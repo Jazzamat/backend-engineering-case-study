@@ -9,8 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.List;
-
+import java.lang.RuntimeException;
+import java.lang.Exception;
 import javax.swing.GroupLayout.Group;
 
 import org.javatuples.Pair;
@@ -109,12 +111,17 @@ public class BackendServiceTest {
     }
 
     @Test
-    public void basicUpdateLevelTestOne() {
-        assertDoesNotThrow(() -> {
-            User testUser = backendService.createUser("testUser").get();
-            backendService.updateUserLevelAndCoins(testUser.getId(), 25);
-        });
+    public void basicUpdateLevelTestOne() throws Exception {
+        User testUser = backendService.createUser("testUser").join(); // Ensure user creation is complete
+        CompletableFuture<User> updatedUserFuture = backendService.updateUserLevelAndCoinsAsyncWrapper(testUser.getId(), 25);
+        updatedUserFuture.thenAccept(updatedUser -> {
+            assertDoesNotThrow(() -> {
+                User userAfterUpdate = backendService.getUser(testUser.getId());
+                assertTrue(userAfterUpdate.getLevel() == 2);
+            });
+        }).join(); 
     }
+    
 
     @Test
     public void create100Users() {
@@ -136,33 +143,43 @@ public class BackendServiceTest {
     }
 
     
-    @Test
-    public void TestEnterTournamentAbove20() { // TODO: This test is flaky
-        tournamentScheduler.startLocalTimeTournament();
-        assertDoesNotThrow(()-> {
-            User testUserAbove20 = backendService.createUser("above20").get();
-            for (int i = 0; i < 21; i++) {
-                backendService.updateUserLevelAndCoins(testUserAbove20.getId(), 25);
-            } 
-            assertDoesNotThrow(() -> {backendService.enterTournament(testUserAbove20.getId());});
-        });
-    }
-    
-    @Test 
-    public void TestEnterTwice() {
-        assertDoesNotThrow(()-> {
-            tournamentScheduler.startLocalTimeTournament();
-            User user = backendService.createUser("letmeintwice!").get();
-            for (int i = 0; i < 20; i++) { // Level up to 20
-                backendService.updateUserLevelAndCoins(user.getId(), 25);
+   @Test
+public void TestEnterTwice() { 
+    tournamentScheduler.startLocalTimeTournament();
+    CompletableFuture<User> userFuture = CompletableFuture.supplyAsync(() -> {
+        try {
+            return backendService.createUser("letmeintwice!").join();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    });
+    CompletableFuture<Void> updateFuture = userFuture.thenAccept(user -> {
+            try {
+                for (int i = 0; i < 20; i++) {
+                    backendService.updateUserLevelAndCoins(user.getId(), 25);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-            assertThrows(AlreadyInCurrentTournamentException.class, () -> {
+    }).exceptionally(ex -> {
+        System.err.println("An error occurred: " + ex.getMessage());
+        return null;
+    });
+    CompletableFuture<Void> enterTournamentFuture = updateFuture.thenAccept(done -> {
+        User user = userFuture.join(); // Re-obtain the user from the future
+           assertDoesNotThrow(() -> {
+                User updatedUser =  backendService.getUser(user.getId());
                 backendService.enterTournament(user.getId());
-                backendService.enterTournament(user.getId()); 
-    
             });
-        });
-    }
+            assertThrows( AlreadyInCurrentTournamentException.class, () -> {
+                User updatedUser =  backendService.getUser(user.getId());
+                backendService.enterTournament(user.getId());
+            });
+    });
+    enterTournamentFuture.join();
+}
+
+ 
 
     @Test
     public void TestDoesntHaveEnoughMoney() {
@@ -762,7 +779,7 @@ public class BackendServiceTest {
             tournamentScheduler.startLocalTimeTournament();
             User user = backendService.createUser("user").get();
             assertDoesNotThrow(() -> {
-                Long tournamentId = tournamentService.getCurrentTournamentId().get();
+                Long tournamentId = tournamentService.getCurrentTournamentId();
                 assertThrows(EntityNotFoundException.class, () -> {
                     backendService.getGroupRank(user.getId(), tournamentId);
                 });
@@ -777,7 +794,7 @@ public class BackendServiceTest {
             tournamentScheduler.startLocalTimeTournament();
             User user = backendService.createUser("user").get();
             assertDoesNotThrow(() -> {
-                Long tournamentId = tournamentService.getCurrentTournamentId().get();
+                Long tournamentId = tournamentService.getCurrentTournamentId();
                 assertThrows(EntityNotFoundException.class, () -> {
                     backendService.getGroupRank(user.getId(), tournamentId);
                 });

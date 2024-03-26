@@ -30,12 +30,12 @@ public class BackendController {
     }
     
     @PutMapping("/users/updateLevel")
-    public ResponseEntity<?> updateUserLevelAndCoins(@RequestParam Long userId) {
+    public CompletableFuture<ResponseEntity<?>> updateUserLevelAndCoins(@RequestParam Long userId) throws Exception {
         try {
-            User updatedUser = backendService.updateUserLevelAndCoins(userId, 25); // TODO remove magic number and perhaps place it elsewhere (maybe in user)  
-            return ResponseEntity.ok(updatedUser);
+            User updatedUser = backendService.updateUserLevelAndCoinsAsyncWrapper(userId, 25).get(); // TODO remove magic number and perhaps place it elsewhere (maybe in user)  
+            return CompletableFuture.completedFuture(ResponseEntity.ok(updatedUser));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return CompletableFuture.completedFuture(ResponseEntity.badRequest().body(e.getMessage()));
         }
     }
     

@@ -41,7 +41,7 @@ public class Redis {
         String redisKey = "leaderboard:group:" + groupId;
         Boolean exists = realtimeleaderboard.hasKey(redisKey);
         if (exists == null || !exists) {
-            GroupLeaderBoard groupLeaderBoard = tournamentService.getGroupLeaderboard(groupId).get(); // this call queries the database
+            GroupLeaderBoard groupLeaderBoard = tournamentService.getGroupLeaderboard(groupId); // this call queries the database
             groupLeaderBoard.getLeaderboard().forEach(pair -> {
                 realtimeleaderboard.opsForZSet().add(redisKey, pair.getValue0().getId() + ":" + pair.getValue1(), pair.getValue1());
             });
@@ -92,7 +92,7 @@ public class Redis {
          Boolean exists = realtimeleaderboard.hasKey(redisKey);
          if (exists == null || !exists) {
              System.out.println("First call so no Redis, generating country leaderboard...");
-             List<Pair<User.Country, Integer>> initialLeaderboard = tournamentService.getCountryLeaderboard(tournamentId).get();
+             List<Pair<User.Country, Integer>> initialLeaderboard = tournamentService.getCountryLeaderboard(tournamentId);
              initialLeaderboard.forEach(pair -> {
                  String country = pair.getValue0().name();
                  Integer score = pair.getValue1();

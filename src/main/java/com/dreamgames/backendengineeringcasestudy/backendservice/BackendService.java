@@ -67,31 +67,38 @@ public class BackendService {
     public CompletableFuture<User> createUser(String username) {
         return CompletableFuture.supplyAsync(() -> userService.createUser(username));
     }
-    
+
+
+    @Async
+    public CompletableFuture<User> updateUserLevelAndCoinsAsyncWrapper(Long userId, int cointsToAdd) {
+        return CompletableFuture.supplyAsync(() -> updateUserLevelAndCoins(userId, cointsToAdd));
+    }
     /**
      * Creates a new user, returning a user object that contains, its id, level, coins and country
      * @param userId
      * @param cointsToAdd
      * @return
      */
-    public User updateUserLevelAndCoins(Long userId, int cointsToAdd) throws Exception {
-        try {
-            Pair<Integer,Long> scoreAndgroupId = tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId().get()).get();
-            System.out.println("UPDATING USER SCORE TO :" + scoreAndgroupId.getValue0()); // TODO delete debug statemetn
-            updateRedisGroupLeaderboard(scoreAndgroupId.getValue1(),userId, scoreAndgroupId.getValue0());
-            updateRedisCountryLeaderBoard(userService.retreiveUsersCountry(userId));
-        } catch (TournamentGroupHasNotBegunException e) { 
-           System.err.println("Tournament group has not begun");
-            // do nothin 
-        } catch (NoSuchTournamentException e) {
-            System.err.println("No such tournament");
-            // do nothin 
-        } catch (EntityNotFoundException e) {
-            // user has no entry to update
-            System.err.println("Entity not found");
-        } 
-        
-        return userService.updateUserLevelAndCoins(userId, cointsToAdd);
+    public User updateUserLevelAndCoins(Long userId, int cointsToAdd) {
+            try {
+                Pair<Integer,Long> scoreAndgroupId = tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId());
+                System.out.println("UPDATING USER SCORE TO :" + scoreAndgroupId.getValue0()); // TODO delete debug statemetn
+                updateRedisGroupLeaderboard(scoreAndgroupId.getValue1(),userId, scoreAndgroupId.getValue0());
+                updateRedisCountryLeaderBoard(userService.retreiveUsersCountry(userId));
+            } catch (TournamentGroupHasNotBegunException e) { 
+               System.err.println("Tournament group has not begun");
+                // do nothin 
+            } catch (NoSuchTournamentException e) {
+                System.err.println("No such tournament");
+                // do nothin 
+            } catch (EntityNotFoundException e) {
+                // user has no entry to update
+                System.err.println("Entity not found");
+            } catch (Exception e) {
+                System.err.println("##### EXCEPTION: " + e.getMessage());
+            }
+            return userService.updateUserLevelAndCoins(userId, cointsToAdd);
+
     }
     
     /**
@@ -116,7 +123,7 @@ public class BackendService {
      * @return
      */
     public User claimReward(Long userId, Long tournamentId) throws TournamentHasNotEndedException, TournamentGroupHasNotBegunException, Exception {
-        if (!tournamentService.hasEnded(tournamentId).get()) {
+        if (!tournamentService.hasEnded(tournamentId)) {
             throw new TournamentHasNotEndedException("Tournament is still going");
         }
         int rank = tournamentService.getGroupRank(userId, tournamentId).get();
@@ -224,14 +231,14 @@ public class BackendService {
     public void broadCastCountryLeaderboardUpdate() {
         System.out.println("BROADCASTING UPDATE TO COUNTRY LEADERBOARD");
         try {
-            broadCastUpdate("country",getCountryLeaderboard(tournamentService.getCurrentTournamentId().get()));
+            broadCastUpdate("country",getCountryLeaderboard(tournamentService.getCurrentTournamentId()));
         } catch (Exception e) {
             System.out.println("couldn't broadcast: " + e);
         }
     }
 
     public Tournament getCurrentTournament() throws NoSuchTournamentException, Exception {
-        return tournamentService.getCurrentTournament().get();
+        return tournamentService.getCurrentTournament();
     }
 
     public void integrationTestMethod() {

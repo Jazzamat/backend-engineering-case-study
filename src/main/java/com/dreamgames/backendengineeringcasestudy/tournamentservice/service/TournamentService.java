@@ -78,34 +78,30 @@ public class TournamentService {
         return;
     }
 
-
     /**
      * Gets the current tournament   
      * @return
      * @throws NoSuchTournamentException
      */     
     @Cacheable("currentTournament")
-    @Async
-    public CompletableFuture<Tournament> getCurrentTournament() throws NoSuchTournamentException {
+    public Tournament getCurrentTournament() throws NoSuchTournamentException {
         LocalDateTime now = LocalDateTime.now();
-        return CompletableFuture.completedFuture(tournamentRepository.findTournamentByStartTimeBeforeAndEndTimeAfter(now, now)
+        return (tournamentRepository.findTournamentByStartTimeBeforeAndEndTimeAfter(now, now)
             .orElseThrow(() -> new NoSuchTournamentException("No current tournament found")));
     }
 
     @Cacheable("currentTournament")
-    @Async
-    public CompletableFuture<Long> getCurrentTournamentId() throws NoSuchTournamentException, Exception {
-        return CompletableFuture.completedFuture(getCurrentTournament().get().getId());
+    public Long getCurrentTournamentId() throws NoSuchTournamentException, Exception {
+        return getCurrentTournament().getId();
     }
     /**
      * Checks if the tournament has ended
      * @param tournamentId
      * @return true if the tournament has ended, false if is still on going
      */
-    @Async
-    public CompletableFuture<Boolean> hasEnded(Long tournamentId) {
+    public Boolean hasEnded(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(() -> new EntityNotFoundException("No such tournament"));
-        return CompletableFuture.completedFuture(tournament.hasEnded());
+        return tournament.hasEnded();
     }
 
     /**
@@ -114,8 +110,7 @@ public class TournamentService {
      * @param tournamentId
      * @throws TournamentGroupHasNotBegunException
      */
-    @Async
-    public CompletableFuture<Pair<Integer, Long>> incrementEntryScore(Long userId, Long tournamentId) throws TournamentGroupHasNotBegunException {
+    public Pair<Integer, Long> incrementEntryScore(Long userId, Long tournamentId) throws TournamentGroupHasNotBegunException {
         TournamentEntry entry = tournamentEntryRepository.findByUserIdAndTournamentId(userId, tournamentId)
         .orElseThrow(() -> new EntityNotFoundException("Entry not found for user " + userId + " in tournament " + tournamentId));
         if (!entry.groupHasBegun()) {
@@ -124,7 +119,7 @@ public class TournamentService {
         Integer score = entry.incrementScore();
         Long id = entry.getGroupId();
         tournamentEntryRepository.save(entry);
-        return CompletableFuture.completedFuture(Pair.with(score, id));
+        return Pair.with(score, id);
     }
   
 
@@ -135,7 +130,7 @@ public class TournamentService {
      * @throws Exception
      */
     public GroupLeaderBoard enterTournament(User user) throws Exception { // TODO maybe can refactor to make look nicer 
-        Tournament currentTournament = getCurrentTournament().get() ;
+        Tournament currentTournament = getCurrentTournament();
         if (tournamentEntryRepository.existsByUserIdAndTournamentId(user.getId(), currentTournament.getId())) {
             throw new AlreadyInCurrentTournamentException("User " + user.getUsername() + " already entered in the current tournament");
         }
@@ -154,7 +149,7 @@ public class TournamentService {
         TournamentGroup group = currentTournament.addUser(user);          
         tournamentGroupRepository.save(group);    
 
-        GroupLeaderBoard groupLeaderBoard = getGroupLeaderboard(group.getId()).get(); 
+        GroupLeaderBoard groupLeaderBoard = getGroupLeaderboard(group.getId()); 
         return groupLeaderBoard;
     }
 
@@ -163,14 +158,14 @@ public class TournamentService {
      * @param groupId
      * @return
      */
-    public CompletableFuture<GroupLeaderBoard> getGroupLeaderboard(Long groupId) {
+    public GroupLeaderBoard getGroupLeaderboard(Long groupId) {
         List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByTournamentGroupIdOrderByScoreDesc(groupId);
         List<Pair<User,Integer>> pairs = new ArrayList<>();
         for (TournamentEntry entry : sortedEntries) {
             Pair<User,Integer> pair = new Pair<User,Integer>(entry.getUser(), entry.getScore());
             pairs.add(pair);
         }
-        return CompletableFuture.completedFuture(new GroupLeaderBoard(pairs, groupId));
+        return new GroupLeaderBoard(pairs, groupId);
     }
 
     /**
@@ -179,16 +174,16 @@ public class TournamentService {
      * @return
      * @throws NoSuchTournamentException
      */
-    public CompletableFuture<List<Pair<User.Country,Integer>>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException , Exception {
+    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException , Exception {
         List<Pair<User.Country,Integer>> countryLeaderBoard = new ArrayList<>();
         for (User.Country country : User.Country.values()) {
-            List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByCountryAndTournamentIdOrderedByScoreDesc(country, getCurrentTournamentId().get()); // TODO can make a new query that doesn't sort for performance purposes
+            List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByCountryAndTournamentIdOrderedByScoreDesc(country, getCurrentTournamentId()); // TODO can make a new query that doesn't sort for performance purposes
             Integer totalScore = sortedEntries.stream().mapToInt(TournamentEntry::getScore).sum();
             Pair<User.Country,Integer> pair = new Pair<User.Country,Integer>(country, totalScore);
             countryLeaderBoard.add(pair);
         }
         countryLeaderBoard.sort((pair1, pair2) -> pair2.getValue1().compareTo(pair1.getValue1()));
-        return CompletableFuture.completedFuture(countryLeaderBoard);
+        return countryLeaderBoard;
     }
 
     /**
@@ -221,7 +216,6 @@ public class TournamentService {
      * Claims a reward for a user. Sets the users reward claimed field to true (persistent)
      * @param userId
      */
-    @Async
     public void claimReward(Long userId) {
         TournamentEntry entry = tournamentEntryRepository.findByUserId(userId).orElseThrow(() -> new EntityNotFoundException());
         entry.setRewardClaimed(true);
@@ -231,7 +225,6 @@ public class TournamentService {
 
     // =========== DEV METHODS ======== // 
 
-    @Async 
     public void endTournament(Long tournamentId) throws NoSuchTournamentException {
         Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(() -> new NoSuchTournamentException("can't end tournament that don't exist"));  
         tournament.endTournament();
