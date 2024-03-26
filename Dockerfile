@@ -6,8 +6,8 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 EXPOSE 8080
-# Build application and skip tests initially
-RUN mvn clean package 
+# Build application and skip tests 
+RUN mvn clean package -Dmaven.test.skip
 
 # Recompile and run tests
 # RUN mvn compile test-compile && mvn test

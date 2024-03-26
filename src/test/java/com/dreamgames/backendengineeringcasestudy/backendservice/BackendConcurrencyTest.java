@@ -6,9 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import com.dreamgames.backendengineeringcasestudy.backendservice.BackendService;
 import com.dreamgames.backendengineeringcasestudy.exceptions.LevelNotHighEnoughException;
-import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentEntryRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentGroupRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentRepository;
@@ -18,7 +16,6 @@ import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
 
-import jakarta.transaction.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -72,10 +69,6 @@ public class BackendConcurrencyTest {
     public void startUpTest() {
     }
 
-    // @Test
-    // public void startATournament() {
-    //     tournamentScheduler.startLocalTimeTournament();
-    // } 
 
     @BeforeEach
     public void clearDB() {
@@ -132,7 +125,6 @@ public class BackendConcurrencyTest {
                 successCounter.incrementAndGet();
             });
         }
-
         executorService.shutdown();
         boolean finished = executorService.awaitTermination(1, TimeUnit.MINUTES);
         long endTime = System.currentTimeMillis();
@@ -147,51 +139,46 @@ public class BackendConcurrencyTest {
 
 
     @Test
-public void testConcurrentTournamentEntryWithLevelRequirement() throws InterruptedException {
-    final int numberOfUsers = 50; // Number of users attempting to enter
-    ExecutorService executor = Executors.newFixedThreadPool(10); // Adjust based on resources
+    public void testConcurrentTournamentEntryWithLevelRequirement() throws InterruptedException {
+        final int numberOfUsers = 50; 
+        ExecutorService executor = Executors.newFixedThreadPool(10); 
 
-    try {
-        Long tournamentId = tournamentService.getCurrentTournamentId();
-    } catch (Exception e) {
-    }
+        try {
+            Long tournamentId = tournamentService.getCurrentTournamentId();
+        } catch (Exception e) {
+        }
 
-    AtomicInteger successCounter = new AtomicInteger(0);
-    AtomicInteger levelNotHighEnoughCounter = new AtomicInteger(0);
+        AtomicInteger successCounter = new AtomicInteger(0);
+        AtomicInteger levelNotHighEnoughCounter = new AtomicInteger(0);
 
-    for (int i = 0; i < numberOfUsers; i++) {
-        executor.submit(() -> {
-            try {
-                // Create a new user
-                User user = backendService.createUser("tournamentUser" + System.nanoTime()).join();
-
-                // Increment user level to meet entry requirement (assuming level increment per method call)
-                for (int j = 0; j < 20; j++) { // Assuming each call increments level by 1
-                    backendService.updateUserLevelAndCoinsAsyncWrapper(user.getId(), 5).join(); // Assume some coins are also added
-                }
-
-                // Attempt to enter the tournament
+        for (int i = 0; i < numberOfUsers; i++) {
+            executor.submit(() -> {
                 try {
-                    backendService.enterTournamentAsyncWrapper(user.getId()).join();
-                    successCounter.incrementAndGet();
-                } catch (Exception e) {
-                    if (e.getCause() instanceof LevelNotHighEnoughException) {
-                        levelNotHighEnoughCounter.incrementAndGet();
-                    } else {
-                        throw e; // Rethrow if it's not a level issue
+                    User user = backendService.createUser("tournamentUser" + System.nanoTime()).join();
+                    for (int j = 0; j < 20; j++) { 
+                        backendService.updateUserLevelAndCoinsAsyncWrapper(user.getId(), 5).join(); 
                     }
+                    try {
+                        backendService.enterTournamentAsyncWrapper(user.getId()).join();
+                        successCounter.incrementAndGet();
+                    } catch (Exception e) {
+                        if (e.getCause() instanceof LevelNotHighEnoughException) {
+                            levelNotHighEnoughCounter.incrementAndGet();
+                        } else {
+                            throw e; 
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Error during user creation or tournament entry", e);
                 }
-            } catch (Exception e) {
-                logger.error("Error during user creation or tournament entry", e);
-            }
-        });
+            });
+        }
+
+        executor.shutdown();
+        assertTrue(executor.awaitTermination(2, TimeUnit.MINUTES), "Executor did not terminate in the expected timeframe.");
+
+        assertEquals(0, levelNotHighEnoughCounter.get(), "Some users did not have high enough levels to enter the tournament.");
+        assertEquals(numberOfUsers, successCounter.get(), "Not all users could enter the tournament.");
     }
-
-    executor.shutdown();
-    assertTrue(executor.awaitTermination(2, TimeUnit.MINUTES), "Executor did not terminate in the expected timeframe.");
-
-    assertEquals(0, levelNotHighEnoughCounter.get(), "Some users did not have high enough levels to enter the tournament.");
-    assertEquals(numberOfUsers, successCounter.get(), "Not all users could enter the tournament.");
-}
 
 }

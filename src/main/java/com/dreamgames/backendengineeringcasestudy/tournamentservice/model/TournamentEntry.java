@@ -1,9 +1,13 @@
 package com.dreamgames.backendengineeringcasestudy.tournamentservice.model;
 
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 
@@ -12,6 +16,7 @@ import jakarta.persistence.GenerationType;
  * 
  * @author E. Omer Gul
  */
+@OptimisticLocking(type=OptimisticLockType.ALL)
 @Entity
 public class TournamentEntry {
 
@@ -24,6 +29,9 @@ public class TournamentEntry {
 
 	@ManyToOne
 	private User user;
+
+	@Version
+	private int version;
 
 	private int score = 0;
 	private boolean rewardClaimed = false;

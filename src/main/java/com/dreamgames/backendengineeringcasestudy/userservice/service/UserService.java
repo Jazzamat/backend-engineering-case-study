@@ -1,14 +1,8 @@
 package com.dreamgames.backendengineeringcasestudy.userservice.service;
 
-import java.util.concurrent.CompletableFuture;
 
-import org.assertj.core.api.CompletableFutureAssert;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.expression.ExpressionException;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
-import org.springframework.test.util.ExceptionCollector;
 
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;

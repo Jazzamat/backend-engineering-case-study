@@ -7,7 +7,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
-import org.springframework.test.util.ExceptionCollector;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
@@ -27,7 +26,6 @@ import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 
 /**
  * This class represents the backend service for the DreamGames application.
@@ -48,8 +46,7 @@ public class BackendService {
     private final Map<Object,List<SseEmitter>> emitters = new HashMap<>();
 
     @Autowired
-    private final RedisTemplate<String,Object> realtimeleaderboard; //TODO maybe I need to make this a list of templates. or maybe have one for counrty one for group
-
+    private final RedisTemplate<String,Object> realtimeleaderboard; 
 
     public BackendService(UserService userService, TournamentService tournamentService, RedisTemplate<String,Object> realtimeleaderboard, TournamentScheduler tournamentScheduler) {
         this.userService = userService;
@@ -77,17 +74,13 @@ public class BackendService {
     public User updateUserLevelAndCoins(Long userId, int cointsToAdd) {
             try {
                 Pair<Integer,Long> scoreAndgroupId = tournamentService.incrementEntryScore(userId, tournamentService.getCurrentTournamentId());
-                System.out.println("UPDATING USER SCORE TO :" + scoreAndgroupId.getValue0()); // TODO delete debug statemetn
                 updateRedisGroupLeaderboard(scoreAndgroupId.getValue1(),userId, scoreAndgroupId.getValue0());
                 updateRedisCountryLeaderBoard(userService.retreiveUsersCountry(userId));
             } catch (TournamentGroupHasNotBegunException e) { 
-               System.err.println("Tournament group has not begun");
-                // do nothin 
+                System.err.println("Tournament group has not begun");
             } catch (NoSuchTournamentException e) {
                 System.err.println("No such tournament");
-                // do nothin 
             } catch (EntityNotFoundException e) {
-                // user has no entry to update
                 System.err.println("Entity not found");
             } catch (Exception e) {
                 System.err.println("##### EXCEPTION: " + e.getMessage());
@@ -102,7 +95,7 @@ public class BackendService {
      * @return
      * @throws Exception
      */
-    public GroupLeaderBoard enterTournament(Long userId) throws Exception { // TODO: Test that users can't enter a new tournament without claiming previous rewards
+    public GroupLeaderBoard enterTournament(Long userId) throws Exception { 
         User user = userService.getUser(userId);
         GroupLeaderBoard groupLeaderBoard = tournamentService.enterTournament(user);
         userService.saveUser(user);
@@ -146,7 +139,7 @@ public class BackendService {
      * @param groupId
      * @return
      */
-    public GroupLeaderBoard getGroupLeaderboard(Long groupId) throws Exception { // TODO test some more now that we have score in there too
+    public GroupLeaderBoard getGroupLeaderboard(Long groupId) throws Exception { 
         return Redis.redisGetGroupLeaderboard(groupId, realtimeleaderboard, tournamentService, userService);
     } 
 
@@ -157,7 +150,7 @@ public class BackendService {
      * @param tournamentId
      * @return
      */
-    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException, Exception { // TODO test some more now that you have changed it arround 
+    public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException, Exception { 
         return Redis.redisGetCountryLeaderboard(realtimeleaderboard, tournamentService, tournamentId);
     }
 
@@ -231,8 +224,14 @@ public class BackendService {
     }
 
     // =========== REDIS HELPER MEHTODS ============== //
-
-    private void updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore) throws Exception { // Could refactor this away to a helper class
+    /**
+     * 
+     * @param groupId
+     * @param userId
+     * @param newScore
+     * @throws Exception
+     */
+    private void updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore) throws Exception { 
         if(Redis.updateRedisGroupLeaderboard(groupId, userId, newScore, realtimeleaderboard)) {
             broadCastGroupLeaderBoardUpdate(groupId);
         }
@@ -242,7 +241,6 @@ public class BackendService {
      * Assumes level change is just plus one per call
      * @param country
      */
-
     public void updateRedisCountryLeaderBoard(User.Country country) {
         if (Redis.updateRedisCountryLeaderBoard(country, realtimeleaderboard)) {
             broadCastCountryLeaderboardUpdate();
@@ -304,16 +302,6 @@ public class BackendService {
         }
     }
 
-    public Tournament getCurrentTournament() throws NoSuchTournamentException, Exception {
-        return tournamentService.getCurrentTournament();
-    }
-
-    public void integrationTestMethod() {
-    }
-    
-    public User getUser(Long userId) throws Exception {
-        return userService.getUser(userId);
-    }
 
     // ========== DEV METHODS ================== //
    
@@ -322,6 +310,17 @@ public class BackendService {
      */
     public Tournament startALocalTimeTournament() {
         return tournamentScheduler.startLocalTimeTournament();
+    }
+
+    public void integrationTestMethod() {
+    }
+
+    public Tournament getCurrentTournament() throws NoSuchTournamentException, Exception {
+        return tournamentService.getCurrentTournament();
+    }
+    
+    public User getUser(Long userId) throws Exception {
+        return userService.getUser(userId);
     }
     
 }

@@ -6,7 +6,7 @@ import org.javatuples.Pair;
 
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 
-public class GroupLeaderBoard { // TODO make sure this aint just a data class
+public class GroupLeaderBoard { 
    
     private List<Pair<User,Integer>> leaderboard;
     private Long groupId;

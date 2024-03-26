@@ -27,10 +27,8 @@ import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.T
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentGroupRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentRepository;
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
-import com.dreamgames.backendengineeringcasestudy.userservice.model.User.Country;
 import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRepository;
 
-import io.netty.util.concurrent.CompleteFuture;
 import jakarta.persistence.EntityNotFoundException;
 
 /**
@@ -74,10 +72,7 @@ public class TournamentService {
         return tournament;
     }
 
-	public void integrationTestMethod() {
-        return;
-    }
-
+	
     /**
      * Gets the current tournament   
      * @return
@@ -129,7 +124,7 @@ public class TournamentService {
      * @return
      * @throws Exception
      */
-    public GroupLeaderBoard enterTournament(User user) throws Exception { // TODO maybe can refactor to make look nicer 
+    public GroupLeaderBoard enterTournament(User user) throws Exception { 
         Tournament currentTournament = getCurrentTournament();
         if (tournamentEntryRepository.existsByUserIdAndTournamentId(user.getId(), currentTournament.getId())) {
             throw new AlreadyInCurrentTournamentException("User " + user.getUsername() + " already entered in the current tournament");
@@ -177,7 +172,7 @@ public class TournamentService {
     public List<Pair<User.Country,Integer>> getCountryLeaderboard(Long tournamentId) throws NoSuchTournamentException , Exception {
         List<Pair<User.Country,Integer>> countryLeaderBoard = new ArrayList<>();
         for (User.Country country : User.Country.values()) {
-            List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByCountryAndTournamentIdOrderedByScoreDesc(country, getCurrentTournamentId()); // TODO can make a new query that doesn't sort for performance purposes
+            List<TournamentEntry> sortedEntries = tournamentEntryRepository.findByCountryAndTournamentIdOrderedByScoreDesc(country, getCurrentTournamentId()); 
             Integer totalScore = sortedEntries.stream().mapToInt(TournamentEntry::getScore).sum();
             Pair<User.Country,Integer> pair = new Pair<User.Country,Integer>(country, totalScore);
             countryLeaderBoard.add(pair);
@@ -229,6 +224,10 @@ public class TournamentService {
         Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(() -> new NoSuchTournamentException("can't end tournament that don't exist"));  
         tournament.endTournament();
         tournamentRepository.save(tournament);
+    }
+
+    public void integrationTestMethod() {
+        return;
     }
 }
     

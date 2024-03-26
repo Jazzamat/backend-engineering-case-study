@@ -14,8 +14,6 @@ services:
       - '8080:8080'
     links:
       - redisdb
-    # networks:
-    #   - 'local-network'
 
   mysqldb:
     image: mysql:8.0.28-oracle
@@ -26,8 +24,6 @@ services:
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
-    # networks:
-    #   - 'local-network'
     ports:
       - '3306:3306'
     volumes:
@@ -43,13 +39,7 @@ services:
     ports:
       - '6379:6379'
     command: redis-server --appendonly yes 
-    # networks:
-    #   - 'local-network'
 
 volumes:
   case-mysql-data:
 
-
-# networks:
-#   local-network:
-#     driver: bridge

@@ -20,6 +20,10 @@ public class BackendControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+     @BeforeEach
+     public void cleanDB() {
+
+     }
 
     @Test
     @Transactional

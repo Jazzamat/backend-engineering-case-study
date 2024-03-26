@@ -3,6 +3,9 @@ package com.dreamgames.backendengineeringcasestudy.tournamentservice.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 
 import jakarta.persistence.CascadeType;
@@ -14,16 +17,21 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.Version;
 
 /**
  * Represents a group within a tournament.
  */
+@OptimisticLocking(type=OptimisticLockType.ALL)
 @Entity
 public class TournamentGroup {
   
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @Version
+    private int version;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Tournament tournament;
@@ -60,7 +68,6 @@ public class TournamentGroup {
                 return false;
             }
         }
-        // TODO check for duplicate entries too
         TournamentEntry newEntry = new TournamentEntry(this, user);
         entries.add(newEntry);
         return true;

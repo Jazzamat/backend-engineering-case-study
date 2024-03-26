@@ -6,7 +6,10 @@ import java.util.List;
 
 import org.hibernate.sql.exec.ExecutionException;
 import org.javatuples.Pair;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 
 import java.time.Duration;
 
@@ -18,25 +21,25 @@ import com.dreamgames.backendengineeringcasestudy.userservice.service.UserServic
 
 
 /**
- * This class provides methods for retrieving leaderboards from Redis cache or database.
- *  The Redis class provides methods for retrieving and updating leaderboard data from Redis cache or database.
- * It interacts with Redis using the provided RedisTemplate and communicates with the tournament and user services
- * to retrieve relevant data.
- * 
- * @author E. Omer Gul
- */
+* This class provides methods for retrieving leaderboards from Redis cache or database.
+*  The Redis class provides methods for retrieving and updating leaderboard data from Redis cache or database.
+* It interacts with Redis using the provided RedisTemplate and communicates with the tournament and user services
+* to retrieve relevant data.
+* 
+* @author E. Omer Gul
+*/
 public class Redis {
-
+    
     /**
-     * Retrieves the group leaderboard from Redis cache or database.
-     * If the leaderboard is not present in Redis cache, it queries the database and stores the result in Redis.
-     * 
-     * @param groupId The ID of the group.
-     * @param realtimeleaderboard The RedisTemplate used for interacting with Redis.
-     * @param tournamentService The service for retrieving tournament-related data.
-     * @param userService The service for retrieving user-related data.
-     * @return The group leaderboard.
-     */
+    * Retrieves the group leaderboard from Redis cache or database.
+    * If the leaderboard is not present in Redis cache, it queries the database and stores the result in Redis.
+    * 
+    * @param groupId The ID of the group.
+    * @param realtimeleaderboard The RedisTemplate used for interacting with Redis.
+    * @param tournamentService The service for retrieving tournament-related data.
+    * @param userService The service for retrieving user-related data.
+    * @return The group leaderboard.
+    */
     public static GroupLeaderBoard redisGetGroupLeaderboard(Long groupId, RedisTemplate<String,Object> realtimeleaderboard, TournamentService tournamentService , UserService userService) throws InterruptedException, ExecutionException, Exception {
         String redisKey = "leaderboard:group:" + groupId;
         Boolean exists = realtimeleaderboard.hasKey(redisKey);
@@ -76,50 +79,50 @@ public class Redis {
             return new GroupLeaderBoard(leaderboard, groupId);
         }
     }
-
+    
     /**
-     * Retrieves the country leaderboard from Redis cache or database.
-     * If the leaderboard is not present in Redis cache, it queries the database and stores the result in Redis.
-     * 
-     * @param realtimeleaderboard The RedisTemplate used for interacting with Redis.
-     * @param tournamentService The service for retrieving tournament-related data.
-     * @param tournamentId The ID of the tournament.
-     * @return The country leaderboard.
-     * @throws NoSuchTournamentException If the tournament does not exist.
-     */
+    * Retrieves the country leaderboard from Redis cache or database.
+    * If the leaderboard is not present in Redis cache, it queries the database and stores the result in Redis.
+    * 
+    * @param realtimeleaderboard The RedisTemplate used for interacting with Redis.
+    * @param tournamentService The service for retrieving tournament-related data.
+    * @param tournamentId The ID of the tournament.
+    * @return The country leaderboard.
+    * @throws NoSuchTournamentException If the tournament does not exist.
+    */
     public static List<Pair<User.Country,Integer>> redisGetCountryLeaderboard(RedisTemplate<String,Object> realtimeleaderboard, TournamentService tournamentService, Long tournamentId) throws NoSuchTournamentException , Exception {
         String redisKey = "leaderboard:country";
-         Boolean exists = realtimeleaderboard.hasKey(redisKey);
-         if (exists == null || !exists) {
-             System.out.println("First call so no Redis, generating country leaderboard...");
-             List<Pair<User.Country, Integer>> initialLeaderboard = tournamentService.getCountryLeaderboard(tournamentId);
-             initialLeaderboard.forEach(pair -> {
-                 String country = pair.getValue0().name();
-                 Integer score = pair.getValue1();
-                 realtimeleaderboard.opsForZSet().add(redisKey, country, score.doubleValue());
-             });
-             return initialLeaderboard;
-         } else {
-             System.out.println("Redis already exists, pulling from cache...");
-             Set<Object> leaderboardData = realtimeleaderboard.opsForZSet().reverseRange(redisKey, 0, -1);
-             List<Pair<User.Country, Integer>> leaderboard = new ArrayList<>();
-             leaderboardData.forEach(item -> {
-                 String countryName = (String) item;
-                 Double score = realtimeleaderboard.opsForZSet().score(redisKey, item);
-                 leaderboard.add(Pair.with(User.Country.valueOf(countryName), score.intValue()));
-             });
-             return leaderboard;
-         }
+        Boolean exists = realtimeleaderboard.hasKey(redisKey);
+        if (exists == null || !exists) {
+            System.out.println("First call so no Redis, generating country leaderboard...");
+            List<Pair<User.Country, Integer>> initialLeaderboard = tournamentService.getCountryLeaderboard(tournamentId);
+            initialLeaderboard.forEach(pair -> {
+                String country = pair.getValue0().name();
+                Integer score = pair.getValue1();
+                realtimeleaderboard.opsForZSet().add(redisKey, country, score.doubleValue());
+            });
+            return initialLeaderboard;
+        } else {
+            System.out.println("Redis already exists, pulling from cache...");
+            Set<Object> leaderboardData = realtimeleaderboard.opsForZSet().reverseRange(redisKey, 0, -1);
+            List<Pair<User.Country, Integer>> leaderboard = new ArrayList<>();
+            leaderboardData.forEach(item -> {
+                String countryName = (String) item;
+                Double score = realtimeleaderboard.opsForZSet().score(redisKey, item);
+                leaderboard.add(Pair.with(User.Country.valueOf(countryName), score.intValue()));
+            });
+            return leaderboard;
+        }
     }
-
+    
     /**
-     * 
-     * @param groupId
-     * @param userId
-     * @param newScore
-     * @param realtimeleaderboard
-     * @return
-     */
+    * 
+    * @param groupId
+    * @param userId
+    * @param newScore
+    * @param realtimeleaderboard
+    * @return
+    */
     public static boolean updateRedisGroupLeaderboard(Long groupId, Long userId, Integer newScore, RedisTemplate<String,Object> realtimeleaderboard) { // Could refactor this away to a helper class
         String redisKey = "leaderboard:group:" + groupId;
         Boolean exists = realtimeleaderboard.hasKey(redisKey);
@@ -139,11 +142,11 @@ public class Redis {
             return false;
         }
     }
-
+    
     /**
-     * Assumes level change is just plus one per call
-     * @param country
-     */
+    * Assumes level change is just plus one per call
+    * @param country
+    */
     public static boolean updateRedisCountryLeaderBoard(User.Country country, RedisTemplate<String,Object> realtimeleaderboard) { // TODO don't we need to chech if redis exists or not?
         String redisKey = "leaderboard:country";
         String countryMember = country.name();

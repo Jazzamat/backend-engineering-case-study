@@ -1,19 +1,16 @@
 
 package com.dreamgames.backendengineeringcasestudy.backendservice;
 
-import static org.hamcrest.Matchers.array;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.lang.RuntimeException;
 import java.lang.Exception;
-import javax.swing.GroupLayout.Group;
 
 import org.javatuples.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,9 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ExceptionCollector;
 
 import com.dreamgames.backendengineeringcasestudy.exceptions.AlreadyInCurrentTournamentException;
 import com.dreamgames.backendengineeringcasestudy.exceptions.HasUnclaimedRewards;
@@ -33,8 +28,6 @@ import com.dreamgames.backendengineeringcasestudy.exceptions.NotEnoughFundsExcep
 import com.dreamgames.backendengineeringcasestudy.exceptions.TournamentGroupHasNotBegunException;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.GroupLeaderBoard;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.Tournament;
-import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentEntry;
-import com.dreamgames.backendengineeringcasestudy.tournamentservice.model.TournamentGroup;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentEntryRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentGroupRepository;
 import com.dreamgames.backendengineeringcasestudy.tournamentservice.repository.TournamentRepository;
@@ -45,7 +38,6 @@ import com.dreamgames.backendengineeringcasestudy.userservice.repository.UserRep
 import com.dreamgames.backendengineeringcasestudy.userservice.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -87,11 +79,6 @@ public class BackendServiceTest {
     @Test
     public void startUpTest() {
     }
-
-    // @Test
-    // public void startATournament() {
-    //     tournamentScheduler.startLocalTimeTournament();
-    // } 
 
     @BeforeEach
     public void clearDB() {
@@ -251,7 +238,7 @@ public void TestEnterTwice() {
     }
 
     @Test
-    public void TestLevelUpAferGroupBegins() { // TODO see while its failing
+    public void TestLevelUpAferGroupBegins() { 
         tournamentScheduler.startLocalTimeTournament();
 
         User turkish = new User("Kemal", User.Country.TURKEY);
@@ -293,7 +280,7 @@ public void TestEnterTwice() {
     }
 
     @Test
-    public void TestGroupLeaderBoardNonTransactional() { // TODO reset db talbes after each run and make it non transactional
+    public void TestGroupLeaderBoardNonTransactional() { 
         entryRepository.deleteAll();
         tournamentRepository.deleteAll();
         userRepository.deleteAll();

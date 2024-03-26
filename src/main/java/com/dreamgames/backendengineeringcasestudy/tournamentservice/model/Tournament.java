@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+
 import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
 
 /**
@@ -19,6 +22,7 @@ import com.dreamgames.backendengineeringcasestudy.userservice.model.User;
  * 
  * @author E. Omer Gul
  */
+@OptimisticLocking(type=OptimisticLockType.ALL)
 @Entity
 public class Tournament {
     
