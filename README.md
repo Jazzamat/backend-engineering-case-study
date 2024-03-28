@@ -18,7 +18,7 @@ You can find the postman collection for the application in the root folder of th
 
 # Assumptions/Notes
 
-* Note that you can create start a tournament for testing purposes through the postman request in the dev folder.
+* Note that you can start a tournament for testing purposes through the postman request in the dev folder.
 * Every user needs to collect rewards regardless of whether they win. As a means of exiting the tournament;
 * Leaderboards need to be created with the get requests first, in order to be able to subscribe to them.
 * Expected leaderboard output:
