@@ -71,7 +71,7 @@ In order to receive realtime updates the client may subscibe to a serverside eve
 
 
 # Thanks 
-If you are examinining this submission thanks you for your time and for the opportunity of being tasked to write software. Its always a pleasure!
+If you are examinining this submission thanks you for your time and for the opportunity to write software. Its always a pleasure!
 Regards,
 Omer (Jazzamat).
 
